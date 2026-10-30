@@ -1,5 +1,5 @@
 // Home page: ocean-view carousel, filters, the home pop-up (gallery, details, more homes),
-// the full-screen photo viewer, the viewing/question form and the new-homes alert.
+// the full-screen photo viewer, the viewing/question form, the contact form and the new-homes alert.
 (() => {
   const { $, $$, esc, track, avail, money, openDlg, closeDlg, send, toast, share, config: C } = window.V;
   const DATA = JSON.parse($('#homes-data').textContent);
@@ -46,7 +46,8 @@
   const filterBar = $('.filters');
   const cards = $$('#homes .grid > .card');
   const areas = $$('#homes .area');
-  const state = { area: 'all', beds: '', max: '', ocean: false, now: false, pets: false, sort: 'soon' };
+  const NO_FILTERS = { area: 'all', beds: '', ocean: false, now: false };
+  const state = { ...NO_FILTERS, sort: 'soon' };
   const sorters = {
     soon: (a, b) => avail(a.dataset.av).sort.localeCompare(avail(b.dataset.av).sort) || a.dataset.rent - b.dataset.rent,
     low: (a, b) => a.dataset.rent - b.dataset.rent,
@@ -55,11 +56,9 @@
   };
   const matches = (d) => (state.area === 'all' || d.area === state.area)
     && (!state.beds || (state.beds === '1' ? +d.beds === 1 : +d.beds >= 2))
-    && (!state.max || +d.rent <= +state.max)
     && (!state.ocean || d.ocean === '1')
-    && (!state.now || avail(d.av).now)
-    && (!state.pets || d.pets === '1');
-  const filtered = () => state.area !== 'all' || state.beds || state.max || state.ocean || state.now || state.pets;
+    && (!state.now || avail(d.av).now);
+  const filtered = () => state.area !== 'all' || state.beds || state.ocean || state.now;
 
   function applyFilters() {
     let shown = 0;
@@ -80,16 +79,12 @@
   function setFilters(fn) {
     fn();
     const run = () => applyFilters();
-    if (document.startViewTransition && !reduceMotion.matches) document.startViewTransition(run);
+    // a transition is skipped when another starts first (quick clicks) or the tab is hidden; that's fine
+    if (document.startViewTransition && !reduceMotion.matches) document.startViewTransition(run).ready.catch(() => {});
     else run();
     track('filter_homes', { ...state });
   }
   if (filterBar) {
-    // fade the right edge only while more filters are hidden off to the side
-    const row = $('.filter-row', filterBar);
-    const edge = () => row.classList.toggle('fade', row.scrollLeft + row.clientWidth < row.scrollWidth - 4);
-    row.addEventListener('scroll', edge, { passive: true });
-    new ResizeObserver(edge).observe(row);
     $$('.seg button', filterBar).forEach((b) => b.addEventListener('click', () => setFilters(() => {
       state.area = b.dataset.area;
       $$('.seg button', filterBar).forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
@@ -98,28 +93,23 @@
       state[b.dataset.toggle] = !state[b.dataset.toggle];
       b.setAttribute('aria-pressed', String(state[b.dataset.toggle]));
     })));
-    $$('select[data-filter]', filterBar).forEach((s) => s.addEventListener('change', () => setFilters(() => {
+    $$('#homes select[data-filter]').forEach((s) => s.addEventListener('change', () => setFilters(() => {
       state[s.dataset.filter] = s.value;
-      s.parentElement.classList.toggle('on', !!s.value && s.dataset.filter !== 'sort');
+      if (s.dataset.filter !== 'sort') s.parentElement.classList.toggle('on', !!s.value);
     })));
-    const clear = () => setFilters(() => {
-      Object.assign(state, { area: 'all', beds: '', max: '', ocean: false, now: false, pets: false });
+    const reset = () => {
+      Object.assign(state, NO_FILTERS);
       $$('.seg button', filterBar).forEach((x) => x.setAttribute('aria-pressed', String(x.dataset.area === 'all')));
       $$('[data-toggle]', filterBar).forEach((x) => x.setAttribute('aria-pressed', 'false'));
-      $$('select[data-filter]', filterBar).forEach((s) => { if (s.dataset.filter !== 'sort') { s.value = ''; s.parentElement.classList.remove('on'); } });
-    });
+      $$('select[data-filter]', filterBar).forEach((s) => { s.value = ''; s.parentElement.classList.remove('on'); });
+    };
+    const clear = () => setFilters(reset);
     $('#clear-filters').addEventListener('click', clear);
     $('#no-results .btn').addEventListener('click', clear);
     // Neighbourhood links jump to that section; if filters are hiding it, clear them first.
     $$('[data-pick-area]').forEach((a) => a.addEventListener('click', () => {
       const area = $(`#${CSS.escape(a.dataset.pickArea)}`);
-      if (area?.hidden || $$('.card', area || document).every((c) => c.hidden)) {
-        Object.assign(state, { area: 'all', beds: '', max: '', ocean: false, now: false, pets: false });
-        $$('.seg button', filterBar).forEach((x) => x.setAttribute('aria-pressed', String(x.dataset.area === 'all')));
-        $$('[data-toggle]', filterBar).forEach((x) => x.setAttribute('aria-pressed', 'false'));
-        $$('select[data-filter]', filterBar).forEach((s) => { if (s.dataset.filter !== 'sort') { s.value = ''; s.parentElement.classList.remove('on'); } });
-        applyFilters();
-      }
+      if (area?.hidden || $$('.card', area || document).every((c) => c.hidden)) { reset(); applyFilters(); }
     }));
     applyFilters();
   }
@@ -232,7 +222,7 @@
               <img src="/assets/brand/michael-128.webp" alt="" width="44" height="44" loading="lazy">
               <div><b>${esc(C.person)}, Vemian</b><span>${$('.talk')?.classList.contains('active') ? 'Active now' : 'Replies soon'}</span></div>
             </div>
-            <p class="pc-small">Call or text <a href="tel:${esc(C.phone)}">${esc(C.phoneLabel)}</a></p>
+            <p class="pc-small">Or text <a href="sms:${esc(C.phone)}">${esc(C.phoneLabel)}</a></p>
           </div>
         </aside>
       </div>
@@ -394,7 +384,7 @@
   }, { passive: true });
 
   // ---------- viewing / question form ----------
-  const ct = $('#contact');
+  const ct = $('#contact-dlg');
   const ctForm = $('#ct-form');
   const ctHome = $('#ct-home');
   const ctDone = $('.done', ct);
@@ -486,13 +476,65 @@
       pill('');
       track(mode === 'viewing' ? 'viewing_request_sent' : 'question_sent', { home_id: h?.id || '', method: how });
     } catch {
-      msg.textContent = `Sorry, that didn’t go through. Please text or call ${C.person} at ${C.phoneLabel}.`;
+      msg.textContent = `Sorry, that didn’t go through. Please text ${C.person} at ${C.phoneLabel}.`;
       msg.className = 'form-msg error';
     } finally {
       btn.disabled = false;
       btn.textContent = 'Send to Michael';
     }
   });
+
+  // ---------- contact section: a message to Michael ----------
+  const mf = $('#msg-form');
+  if (mf) {
+    const contactOk = (v) => (/@/.test(v) ? /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v) : v.replace(/\D/g, '').length >= 10);
+    mf.addEventListener('input', (e) => e.target.closest('.field')?.classList.remove('invalid'));
+    mf.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      let first = null;
+      $$('.field', mf).forEach((f) => {
+        const el = $('input, select, textarea', f);
+        const ok = el.checkValidity() && (el.dataset.check !== 'contact' || contactOk(el.value.trim()));
+        f.classList.toggle('invalid', !ok);
+        if (!ok && !first) first = el;
+      });
+      if (first) { first.focus(); return; }
+      const f = new FormData(mf);
+      if (f.get('company')) return; // honeypot
+      const name = String(f.get('name')).trim();
+      const contact = String(f.get('contact')).trim();
+      const message = String(f.get('message')).trim();
+      const isEmail = /@/.test(contact);
+      const h = HOMES[f.get('home')];
+      const label = h ? `${homeName(h)}, ${h.street} (${money(h.rent)}/mo)` : 'Any listing';
+      const btn = $('button[type=submit]', mf);
+      const msg = $('.form-msg', mf);
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span> Sending…';
+      msg.textContent = '';
+      msg.className = 'form-msg';
+      try {
+        const how = await send({
+          type: 'message',
+          subject: `Message · ${h ? homeName(h) : 'any listing'} · ${name}`,
+          name, email: isEmail ? contact : '', phone: isEmail ? '' : contact, replyTo: isEmail ? contact : '',
+          home: label, message,
+          sections: [{ title: 'Message', rows: [['Listing', label], ['Name', name], ['Phone or email', contact], ['Message', message]] }],
+        });
+        mf.reset();
+        msg.textContent = how === 'sent'
+          ? `Thanks, ${name.split(' ')[0]}! ${C.person} will reply by ${isEmail ? 'email' : 'text'} shortly.`
+          : `Your email app opened with your message. Press send and it goes straight to ${C.person}.`;
+        track('contact_message_sent', { home_id: h?.id || '', method: how });
+      } catch {
+        msg.textContent = `Sorry, that didn’t go through. Please text ${C.person} at ${C.phoneLabel}.`;
+        msg.className = 'form-msg error';
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Send message';
+      }
+    });
+  }
 
   // ---------- new homes alert ----------
   const al = $('#alerts-form');

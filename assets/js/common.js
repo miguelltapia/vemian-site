@@ -90,7 +90,7 @@
       lines.push('');
     });
     if (body.files?.length) lines.push('(Please attach your documents to this email.)');
-    const url = `mailto:${C.email}?subject=${encodeURIComponent(body.subject || 'Message from vemian.com')}&body=${encodeURIComponent(lines.join('\n'))}`;
+    const url = `mailto:${C.email}?subject=${encodeURIComponent(body.subject || 'Message from vemianpm.com')}&body=${encodeURIComponent(lines.join('\n'))}`;
     location.href = url.length > 7800 ? url.slice(0, 7800) : url;
   }
 
@@ -129,26 +129,40 @@
     const ta = $('textarea', form);
     let greeted = false;
 
+    // On phones the panel fills the part of the screen that's visible above the keyboard, so the form and its
+    // Send button never end up hidden behind it (visualViewport shrinks when the keyboard opens).
+    const phone = matchMedia('(max-width: 560px)');
+    const fit = () => {
+      const vv = window.visualViewport;
+      if (!vv || !phone.matches || panel.hidden) { panel.style.removeProperty('--vv-h'); panel.style.removeProperty('--vv-top'); return; }
+      panel.style.setProperty('--vv-h', `${Math.round(vv.height)}px`);
+      panel.style.setProperty('--vv-top', `${Math.round(vv.offsetTop)}px`);
+    };
+    window.visualViewport?.addEventListener('resize', fit);
+    window.visualViewport?.addEventListener('scroll', fit);
+    phone.addEventListener('change', () => { fit(); html.classList.toggle('talk-lock', phone.matches && !panel.hidden); });
+
+    const show = (el) => { body.append(el); el.scrollIntoView({ block: 'nearest' }); };
     const bubble = (text, mine) => {
       const p = document.createElement('p');
       p.className = 'talk-msg' + (mine ? ' mine' : '');
       p.textContent = text;
-      body.append(p);
-      body.scrollTop = body.scrollHeight;
+      show(p);
     };
     const typingThen = (text, ms = 900) => {
       const t = document.createElement('div');
       t.className = 'talk-typing';
       t.setAttribute('aria-label', `${C.person} is typing`);
       t.innerHTML = '<span></span><span></span><span></span>';
-      body.append(t);
-      body.scrollTop = body.scrollHeight;
+      show(t);
       setTimeout(() => { t.remove(); bubble(text); }, reduceMotion.matches ? 0 : ms);
     };
     const open = (prefill) => {
       panel.hidden = false;
       btn.setAttribute('aria-expanded', 'true');
       talk.classList.add('open');
+      html.classList.toggle('talk-lock', phone.matches);
+      fit();
       if (!greeted) {
         greeted = true;
         typingThen(active
@@ -156,13 +170,16 @@
           : `Hi, I’m ${C.person}. I’m away right now; leave a message and I’ll get back to you first thing.`);
       }
       if (prefill) { ta.value = prefill; }
-      setTimeout(() => { ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length); }, 60);
+      // on phones, wait for a tap before raising the keyboard (it would cover the greeting and shortcuts)
+      if (!phone.matches || prefill) setTimeout(() => { ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length); }, 60);
       track('talk_open');
     };
     const close = () => {
       panel.hidden = true;
       btn.setAttribute('aria-expanded', 'false');
       talk.classList.remove('open');
+      html.classList.remove('talk-lock');
+      fit();
       btn.focus();
     };
     talkApi.open = open;
@@ -201,7 +218,7 @@
       try {
         const how = await send({
           type: 'message',
-          subject: `Message from ${f.name.trim()} (vemian.com)`,
+          subject: `Message from ${f.name.trim()} (vemianpm.com)`,
           name: f.name.trim(), email: /@/.test(f.contact) ? f.contact.trim() : '', phone: /@/.test(f.contact) ? '' : f.contact.trim(),
           replyTo: /@/.test(f.contact) ? f.contact.trim() : '',
           message: f.message.trim(),
@@ -215,7 +232,7 @@
           : `Thanks, ${first}! Your email app opened with your message. Press send and it comes straight to me.`);
         track('talk_message_sent', { method: how });
       } catch {
-        typingThen(`Sorry, that didn’t go through. Please text or call me at ${C.phoneLabel}.`, 500);
+        typingThen(`Sorry, that didn’t go through. Please text me at ${C.phoneLabel}.`, 500);
       } finally { sendBtn.disabled = false; }
     });
   }
