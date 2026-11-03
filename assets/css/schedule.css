@@ -1,0 +1,24 @@
+/* Michael's showing scheduler (/schedule), on top of site.css and report.css (lock screen and top bar). */
+.sc-main { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 16px; align-items: start; padding-block: 24px 56px; }
+.sc-card { background: var(--white); border: 1px solid var(--line); border-radius: var(--radius-lg); padding: clamp(18px, 3vw, 28px); min-width: 0; }
+#sc-form { display: grid; gap: 16px; }
+#sc-form h1 { font-size: var(--step-2); }
+.sc-sends { border: 0; padding: 0; margin: 0; display: grid; gap: 10px; }
+.sc-sends legend { margin-bottom: 6px; }
+.sc-sends .check span { font-size: 0.9rem; color: var(--ink-70); line-height: 1.45; }
+.sc-sends .check b { color: var(--charcoal); font-weight: 600; }
+.sc-sends em { font-style: normal; color: var(--err); }
+.sc-when { font-weight: 600; color: var(--green-900); min-height: 1.4em; }
+.sc-done { padding: 12px 14px; border-radius: 12px; background: var(--ok-bg); color: #1f5a37; line-height: 1.5; }
+.sc-list { position: sticky; top: 84px; }
+.sc-list-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; margin-bottom: 12px; }
+.sc-list h2 { font-family: var(--sans); font-size: 0.95rem; font-weight: 600; }
+.sc-items { list-style: none; display: grid; gap: 8px; }
+.sc-items li { display: grid; gap: 2px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 12px; }
+.sc-items b { font-size: 0.9rem; color: var(--green-900); }
+.sc-items span { font-size: 0.88rem; color: var(--charcoal); }
+.sc-items small { font-size: 0.8rem; color: var(--ink-55); }
+@media (max-width: 860px) {
+  .sc-main { grid-template-columns: minmax(0, 1fr); }
+  .sc-list { position: static; }
+}
