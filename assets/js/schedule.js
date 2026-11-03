@@ -1,7 +1,8 @@
 // Michael's showing scheduler (/schedule, not linked, not indexed). The page holds no secrets: the password, the
 // managers' emails and the exact addresses are in the "Vemian showings" Google script (form-backend/Showings.gs),
-// which checks the password on every request, adds the calendar event (with the Outlook invitation) and sends the
-// two emails. Times are Vancouver time: UTC−7 all year since BC's permanent daylight time (2026).
+// which checks the password on every request, books, moves and cancels the calendar events (Outlook is invited)
+// and sends the emails. Every showing is 15 minutes, in Vancouver time: UTC−7 all year since BC's permanent
+// daylight time (2026).
 (() => {
   const $ = (s, r = document) => r.querySelector(s);
   const $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -21,6 +22,9 @@
     const [y, mo, d] = date.split('-').map(Number);
     return `${DAYS[new Date(Date.UTC(y, mo - 1, d)).getUTCDay()]}, ${MONTHS[mo - 1]} ${d}, ${y} at ${clock(time)}`;
   };
+  const times = [];
+  for (let m = 8 * 60; m <= 20 * 60 + 45; m += 15) times.push(`${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`);
+  const timeOptions = (sel) => times.map((t) => `<option value="${t}"${t === sel ? ' selected' : ''}>${clock(t)}</option>`).join('');
 
   // ---------- talking to the script ----------
   async function call(action, extra = {}) {
@@ -31,6 +35,12 @@
     if (!res.ok || !data.ok) { const err = new Error(data.error || `The script answered ${res.status}.`); err.auth = data.auth === false; throw err; }
     return data;
   }
+  const sentText = (s = {}) => [
+    s.calendar && 'Google Calendar updated',
+    s.outlook && `${esc(D.outlook)} told`,
+    s.prospect && `prospect emailed from ${esc(s.prospect)}`,
+    s.manager && (/^not sent/.test(s.manager) ? `manager ${esc(s.manager)}` : `manager told at ${esc(s.manager)}`),
+  ].filter(Boolean).join(' · ');
 
   // ---------- lock ----------
   const lock = $('#lock');
@@ -59,15 +69,12 @@
   try { remembered = sessionStorage.getItem(SAVED); } catch { /* storage blocked */ }
   if (remembered) open(remembered, true); else $('input', form).focus();
 
-  // ---------- the scheduler ----------
-  const times = [];
-  for (let m = 8 * 60; m <= 20 * 60 + 45; m += 15) times.push(`${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`);
-
+  // ---------- book ----------
   function start(account) {
     app.innerHTML = `
       <header class="rp-top"><div class="wrap rp-top-in">
         <img src="/assets/brand/vemian-wordmark-56.png" srcset="/assets/brand/vemian-wordmark-112.png 2x" alt="Vemian" height="28">
-        <div class="rp-title"><b>Showings</b><span>Calendar: ${esc(account || 'your Google account')} · Vancouver time (UTC−7)</span></div>
+        <div class="rp-title"><b>Showings</b><span>Calendar: ${esc(account || 'your Google account')} · 15 min · Vancouver time (UTC−7)</span></div>
         <button type="button" class="btn btn-ghost btn-sm" data-lock>Lock</button>
       </div></header>
       <div class="wrap sc-main">
@@ -77,24 +84,27 @@
             <div class="field"><label for="sc-b">Building</label><select class="select" id="sc-b" required><option value="">Choose…</option>${D.buildings.map((b) => `<option value="${esc(b.id)}">${esc(b.name)}</option>`).join('')}</select></div>
             <div class="field"><label for="sc-u">Unit</label><select class="select" id="sc-u" required disabled><option value="">Pick the building first</option></select></div>
           </div>
-          <div class="field" id="sc-other" hidden><label for="sc-unit">Unit number</label><input class="input" id="sc-unit" inputmode="text" maxlength="30" placeholder="e.g. 1406"></div>
+          <div class="field" id="sc-other" hidden><label for="sc-unit">Unit number <span class="opt">(no listing link for this one)</span></label><input class="input" id="sc-unit" inputmode="text" maxlength="30" placeholder="e.g. 1406"></div>
           <div class="field"><label for="sc-email">Prospect’s email</label><input class="input" id="sc-email" type="email" autocomplete="off" required placeholder="name@example.com"></div>
-          <div class="row-3">
+          <div class="row-2">
             <div class="field"><label for="sc-date">Day</label><input class="input" id="sc-date" type="date" required min="${vanToday()}" value="${vanToday()}"></div>
-            <div class="field"><label for="sc-time">Time</label><select class="select" id="sc-time" required>${times.map((t) => `<option value="${t}"${t === '17:00' ? ' selected' : ''}>${clock(t)}</option>`).join('')}</select></div>
-            <div class="field"><label for="sc-len">Length</label><select class="select" id="sc-len">${[15, 30, 45, 60].map((m) => `<option value="${m}"${m === 30 ? ' selected' : ''}>${m} min</option>`).join('')}</select></div>
+            <div class="field"><label for="sc-time">Time <span class="opt">(15 min)</span></label><select class="select" id="sc-time" required>${timeOptions('17:00')}</select></div>
           </div>
           <div class="field"><label for="sc-note">Private note <span class="opt">(only in your calendar and Outlook)</span></label><input class="input" id="sc-note" maxlength="300"></div>
           <fieldset class="sc-sends"><legend class="label">Send</legend>
-            <label class="check"><input type="checkbox" id="sc-p" checked> <span><b>Confirmation to the prospect</b>, from ${esc(D.prospectFrom)}, with the address and “text ${esc(D.textNumber)} when you arrive”</span></label>
+            <label class="check"><input type="checkbox" id="sc-p" checked> <span><b>Confirmation to the prospect</b>, from ${esc(D.prospectFrom)}: the listing, the address and a tap-to-text link to ${esc(D.textNumber)}</span></label>
             <label class="check"><input type="checkbox" id="sc-m" checked> <span><b>Note to the building manager</b>, from your Gmail: building, unit, day and time only <em id="sc-mgr"></em></span></label>
-            <label class="check"><input type="checkbox" id="sc-o" checked> <span><b>Invitation to ${esc(D.outlook)}</b>, to accept in Outlook</span></label>
+            <label class="check"><input type="checkbox" id="sc-o" checked> <span><b>Invitation to ${esc(D.outlook)}</b> with the listing, to accept in Outlook</span></label>
           </fieldset>
           <p class="sc-when" id="sc-when" aria-live="polite"></p>
           <button class="btn btn-primary btn-block" type="submit" id="sc-go">Schedule showing</button>
           <p class="form-msg" id="sc-msg" role="alert"></p>
         </form>
-        <section class="sc-card sc-list" aria-labelledby="sc-up"><div class="sc-list-head"><h2 id="sc-up">Upcoming showings</h2><button type="button" class="link" id="sc-refresh">Refresh</button></div><div id="sc-items"><p class="rp-empty">Loading…</p></div></section>
+        <section class="sc-card sc-list" aria-labelledby="sc-up">
+          <div class="sc-list-head"><h2 id="sc-up">Upcoming showings</h2><button type="button" class="link" id="sc-refresh">Refresh</button></div>
+          <p class="form-msg" id="sc-list-msg" role="status"></p>
+          <div id="sc-items"><p class="rp-empty">Loading…</p></div>
+        </section>
       </div>`;
     $('[data-lock]', app).addEventListener('click', () => { try { sessionStorage.removeItem(SAVED); } catch { /* storage blocked */ } location.reload(); });
 
@@ -102,16 +112,17 @@
     const fill = () => {
       const list = D.homes.filter((h) => h.b === b.value);
       u.disabled = !b.value;
-      u.innerHTML = b.value ? `${list.map((h) => `<option value="${esc(h.unit)}">#${esc(h.unit)} · ${esc(h.label)}</option>`).join('')}<option value="__other">Another unit…</option>` : '<option value="">Pick the building first</option>';
+      // a listed home's value is its id (the emails link to its listing); "Another unit…" is typed in
+      u.innerHTML = b.value ? `${list.map((h) => `<option value="${esc(h.id)}">#${esc(h.unit)} · ${esc(h.label)}</option>`).join('')}<option value="__other">Another unit…</option>` : '<option value="">Pick the building first</option>';
       other.hidden = !b.value || list.length > 0;
       if (b.value && !list.length) u.value = '__other';
       const known = Object.prototype.hasOwnProperty.call(MANAGERS, b.value);
-      $('#sc-mgr').textContent = !b.value ? '' : known && MANAGERS[b.value] ? '' : '(no manager email for this building yet: add it in Showings.gs)';
+      $('#sc-mgr').textContent = !b.value ? '' : known && MANAGERS[b.value] ? '' : '(no manager email for this building)';
       sum();
     };
     const sum = () => {
       const date = $('#sc-date').value, time = $('#sc-time').value;
-      $('#sc-when').textContent = date && time ? `${when(date, time)} · Vancouver time (UTC−7)` : '';
+      $('#sc-when').textContent = date && time ? `${when(date, time)} · 15 min · Vancouver time (UTC−7)` : '';
     };
     b.addEventListener('change', fill);
     u.addEventListener('change', () => { other.hidden = u.value !== '__other'; if (!other.hidden) $('#sc-unit').focus(); });
@@ -121,7 +132,8 @@
     $('#sc-form').addEventListener('submit', async (e) => {
       e.preventDefault();
       const out = $('#sc-msg');
-      const unit = u.value === '__other' ? $('#sc-unit').value.trim() : u.value;
+      const home = D.homes.find((h) => h.id === u.value);
+      const unit = home ? home.unit : $('#sc-unit').value.trim();
       const email = $('#sc-email').value.trim();
       const problems = [!b.value && 'pick the building', !unit && 'add the unit', !/^[^@\s]+@[^@\s]+\.[^@\s]{2,}$/.test(email) && 'enter the prospect’s email', !$('#sc-date').value && 'pick the day'].filter(Boolean);
       if (problems.length) { out.className = 'form-msg error'; out.textContent = `Please ${problems.join(', ')}.`; return; }
@@ -133,18 +145,12 @@
       const bld = D.buildings.find((x) => x.id === b.value);
       try {
         const r = await call('schedule', {
-          building: b.value, buildingName: bld?.name, address: bld?.street ? `${bld.street}, Vancouver, BC` : '', unit, email,
-          date: $('#sc-date').value, time: $('#sc-time').value, minutes: Number($('#sc-len').value), note: $('#sc-note').value.trim(),
+          building: b.value, buildingName: bld?.name, address: bld?.street ? `${bld.street}, Vancouver, BC` : '', unit, home: home ? home.id : '', email,
+          date: $('#sc-date').value, time: $('#sc-time').value, note: $('#sc-note').value.trim(),
           emailProspect: $('#sc-p').checked, emailManager: $('#sc-m').checked, outlook: $('#sc-o').checked,
         });
-        const s = r.sent || {};
         out.className = 'form-msg sc-done';
-        out.innerHTML = `<b>Scheduled: ${esc(r.place)}, ${esc(r.when)}.</b><br>${[
-          s.calendar && 'Added to your Google Calendar',
-          s.outlook && `invitation sent to ${esc(D.outlook)}`,
-          s.prospect && `prospect emailed from ${esc(s.prospect)}`,
-          s.manager && (/^not sent/.test(s.manager) ? `manager ${esc(s.manager)}` : `manager told at ${esc(s.manager)}`),
-        ].filter(Boolean).join(' · ')}`;
+        out.innerHTML = `<b>Scheduled: ${esc(r.place)}, ${esc(r.when)}.</b><br>${sentText(r.sent)}`;
         $('#sc-email').value = '';
         $('#sc-note').value = '';
         list();
@@ -157,17 +163,61 @@
       }
     });
     $('#sc-refresh').addEventListener('click', list);
+    $('#sc-items').addEventListener('click', onItem);
     list();
   }
 
+  // ---------- upcoming: reschedule or cancel ----------
+  let ITEMS = [];
   async function list() {
     const box = $('#sc-items');
     try {
       const r = await call('list');
-      const items = r.showings || [];
-      box.innerHTML = items.length ? `<ul class="sc-items">${items.map((s) => `<li><b>${esc(s.when)}</b><span>${esc(s.title)}</span>${s.prospect ? `<small>${esc(s.prospect)}</small>` : ''}</li>`).join('')}</ul>` : '<p class="rp-empty">Nothing booked in the next 60 days.</p>';
+      ITEMS = r.showings || [];
+      box.innerHTML = ITEMS.length ? `<ul class="sc-items">${ITEMS.map((s, i) => `<li data-i="${i}">
+          <b>${esc(s.when)}</b><span>${esc(s.title)}</span>${s.prospect ? `<small>${esc(s.prospect)}</small>` : ''}
+          <div class="sc-acts"><button type="button" class="btn btn-ghost btn-sm" data-act="move">Reschedule</button><button type="button" class="btn btn-ghost btn-sm sc-cancel" data-act="cancel">Cancel</button></div>
+          <div class="sc-move" hidden>
+            <div class="row-2"><div class="field"><label>New day</label><input class="input" type="date" min="${vanToday()}" value="${esc(s.date || vanToday())}"></div>
+            <div class="field"><label>New time</label><select class="select">${timeOptions(s.time || '17:00')}</select></div></div>
+            <div class="sc-acts"><button type="button" class="btn btn-primary btn-sm" data-act="save">Move showing</button><button type="button" class="link" data-act="close">Keep it</button></div>
+          </div></li>`).join('')}</ul>` : '<p class="rp-empty">Nothing booked in the next 60 days.</p>';
     } catch (e) {
       box.innerHTML = `<p class="rp-empty">${esc(e.message)}</p>`;
+    }
+  }
+
+  async function onItem(e) {
+    const btn = e.target.closest('[data-act]');
+    if (!btn) return;
+    const li = btn.closest('li');
+    const s = ITEMS[Number(li.dataset.i)];
+    const out = $('#sc-list-msg');
+    const move = $('.sc-move', li);
+    if (btn.dataset.act === 'move') { move.hidden = !move.hidden; return; }
+    if (btn.dataset.act === 'close') { move.hidden = true; return; }
+    const busy = (on, label) => { $$('button', li).forEach((x) => { x.disabled = on; }); if (on) btn.innerHTML = `<span class="spinner"></span> ${label}`; };
+    try {
+      if (btn.dataset.act === 'cancel') {
+        if (!confirm(`Cancel the showing at ${s.title}, ${s.when}?\n\nThe prospect, the building manager and ${D.outlook} will be told.`)) return;
+        busy(true, 'Cancelling…');
+        const r = await call('cancel', { id: s.id });
+        out.className = 'form-msg sc-done';
+        out.innerHTML = `<b>Cancelled: ${esc(r.place)}, ${esc(r.when)}.</b><br>${sentText(r.sent)}`;
+      } else if (btn.dataset.act === 'save') {
+        const date = $('input[type=date]', move).value, time = $('select', move).value;
+        if (!date) return;
+        busy(true, 'Moving…');
+        const r = await call('reschedule', { id: s.id, date, time });
+        out.className = 'form-msg sc-done';
+        out.innerHTML = `<b>Moved: ${esc(r.place)}, now ${esc(r.when)}.</b><br>${sentText(r.sent)}`;
+      }
+      list();
+    } catch (err) {
+      out.className = 'form-msg error';
+      out.textContent = err.auth ? 'The password stopped working. Lock and open the page again.' : err.message;
+      busy(false);
+      list();
     }
   }
 })();

@@ -18,6 +18,15 @@
 .sc-items b { font-size: 0.9rem; color: var(--green-900); }
 .sc-items span { font-size: 0.88rem; color: var(--charcoal); }
 .sc-items small { font-size: 0.8rem; color: var(--ink-55); }
+.sc-acts { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 8px; }
+.sc-acts .btn-sm { min-height: 34px; font-size: 0.82rem; }
+.sc-cancel { color: var(--err); border-color: color-mix(in srgb, var(--err) 35%, transparent); }
+.sc-cancel:hover { border-color: var(--err); background: var(--err-bg); }
+.sc-move { display: grid; gap: 8px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--line); }
+.sc-move .row-2 { gap: 8px; }
+.sc-move .input, .sc-move .select { min-height: 42px; padding-block: 8px; font-size: 0.92rem; }
+#sc-list-msg:empty { display: none; }
+#sc-list-msg { margin-bottom: 10px; }
 @media (max-width: 860px) {
   .sc-main { grid-template-columns: minmax(0, 1fr); }
   .sc-list { position: static; }
