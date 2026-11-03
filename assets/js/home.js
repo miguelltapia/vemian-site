@@ -6,8 +6,10 @@
   const HOMES = DATA.homes;
   const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)');
   const icon = (n) => `<svg class="icon" aria-hidden="true"><use href="#i-${n}"/></svg>`;
-  const img = (dir, p, sizes, eager) => `<img src="/assets/photos/${dir}/${p[0]}-${p[4][Math.min(1, p[4].length - 1)]}.webp" srcset="${p[4].map((w) => `/assets/photos/${dir}/${p[0]}-${w}.webp ${w}w`).join(', ')}" sizes="${sizes}" width="${p[2]}" height="${p[3]}" alt="${esc(p[1])}"${eager ? ' fetchpriority="high"' : ' loading="lazy"'} decoding="async">`;
-  const homeName = (h) => `${h.bn} #${h.u}`;
+  // p = [file, caption, width, height, widths, version]; the ?v= version is added by build.mjs (see pver there)
+  const src = (dir, p, w) => `/assets/photos/${dir}/${p[0]}-${w}.webp${p[5] ? `?v=${p[5]}` : ''}`;
+  const img = (dir, p, sizes, eager) => `<img src="${src(dir, p, p[4][Math.min(1, p[4].length - 1)])}" srcset="${p[4].map((w) => `${src(dir, p, w)} ${w}w`).join(', ')}" sizes="${sizes}" width="${p[2]}" height="${p[3]}" alt="${esc(p[1])}"${eager ? ' fetchpriority="high"' : ' loading="lazy"'} decoding="async">`;
+  const homeName = (h) => h.nm;   // "Elliot Towers #202", or a home's own name (houses, unnamed buildings)
   const homeUrl = (id) => `${location.pathname}?home=${encodeURIComponent(id)}`;
 
   // ---------- keep "Available …" labels current (a date that has passed reads "Available now") ----------
@@ -55,7 +57,7 @@
     big: (a, b) => b.dataset.sqft - a.dataset.sqft,
   };
   const matches = (d) => (state.area === 'all' || d.area === state.area)
-    && (!state.beds || (state.beds === '1' ? +d.beds === 1 : +d.beds >= 2))
+    && (!state.beds || (state.beds === '2' ? +d.beds >= 2 : +d.beds === +state.beds))   // '0' studio, '1', '2' = 2+
     && (!state.ocean || d.ocean === '1')
     && (!state.now || avail(d.av).now);
   const filtered = () => state.area !== 'all' || state.beds || state.ocean || state.now;
@@ -185,7 +187,7 @@
     const bld = DATA.buildings[h.b];
     const gal = set.map((x, i) => `<button type="button" data-lb="${i}" aria-label="Photo ${i + 1} of ${n}: ${esc(x.p[1])}">${img(x.dir, x.p, i === 0 ? '(max-width: 899px) 100vw, 640px' : '(max-width: 899px) 100vw, 300px', i === 0)}</button>`).join('');
     const size = h.sqft ? `${h.sqft.toLocaleString('en-CA')} sq ft${h.balcony ? ` + ${h.balcony} balcony` : ''}` : '';
-    const beds = `${h.beds} bed${h.den ? ' + den' : ''}${h.flex ? ' + flex' : ''}`;
+    const beds = h.bl;
 
     inner.innerHTML = `
       <div class="gal-wrap">
@@ -202,7 +204,7 @@
             ${h.vt ? `<span class="badge">${icon('wave')} ${esc(h.vt)}</span>` : ''}
           </div>
           <h2 id="hd-title">${esc(h.t)}</h2>
-          <p class="hd-addr">${icon('pin')}<span>${esc(homeName(h))} · ${esc(h.street)}, ${esc(h.an)}, Vancouver</span></p>
+          <p class="hd-addr">${icon('pin')}<span>${h.nn ? '' : `${esc(homeName(h))} · `}${esc(h.street)}, ${esc(h.an)}, Vancouver</span></p>
           <dl class="hd-quick">
             <div><dt>${icon('bed')} Bedrooms</dt><dd>${esc(beds)}</dd></div>
             <div><dt>${icon('bath')} Bathrooms</dt><dd>${h.baths}</dd></div>
@@ -469,11 +471,11 @@
       $('h3', ctDone).textContent = how === 'sent' ? `Thanks, ${first}!` : 'Almost there';
       $('p', ctDone).textContent = how === 'sent'
         ? (mode === 'viewing' ? `${C.person} will text you at ${f.get('phone')} to confirm a time.` : `${C.person} will get back to you shortly.`)
-        : 'Your email app opened with everything filled in. Press send and it goes straight to Michael.';
+        : `Your email app should have opened with everything filled in: press send there. If nothing opened, close this and your answers are still in the form, or text ${C.person} at ${C.phoneLabel}.`;
       const applyA = $('[data-done-apply]', ctDone);
       applyA.href = `/apply${h ? `?home=${encodeURIComponent(h.id)}` : ''}`;
-      ctForm.reset();
-      pill('');
+      // clear the form only once the request has really arrived (the email-app fallback can't confirm that)
+      if (how === 'sent') { ctForm.reset(); pill(''); }
       track(mode === 'viewing' ? 'viewing_request_sent' : 'question_sent', { home_id: h?.id || '', method: how });
     } catch {
       msg.textContent = `Sorry, that didn’t go through. Please text ${C.person} at ${C.phoneLabel}.`;
@@ -521,10 +523,10 @@
           home: label, message,
           sections: [{ title: 'Message', rows: [['Listing', label], ['Name', name], ['Phone or email', contact], ['Message', message]] }],
         });
-        mf.reset();
+        if (how === 'sent') mf.reset();
         msg.textContent = how === 'sent'
           ? `Thanks, ${name.split(' ')[0]}! ${C.person} will reply by ${isEmail ? 'email' : 'text'} shortly.`
-          : `Your email app opened with your message. Press send and it goes straight to ${C.person}.`;
+          : `Your email app should have opened with your message: press send there. If nothing opened, text ${C.person} at ${C.phoneLabel}.`;
         track('contact_message_sent', { home_id: h?.id || '', method: how });
       } catch {
         msg.textContent = `Sorry, that didn’t go through. Please text ${C.person} at ${C.phoneLabel}.`;
@@ -561,6 +563,77 @@
       }
     });
   }
+
+  // ---------- map: Leaflet and map.js load only when the map nears the screen ----------
+  window.V.openHome = openHome;
+  window.V.data = DATA;
+  const mapBox = $('#homes-map');
+  let mapLoading = null;
+  function loadMap() {
+    if (mapLoading) return mapLoading;
+    const add = (tag, attrs) => new Promise((resolve, reject) => {
+      const el = Object.assign(document.createElement(tag), attrs, { onload: resolve, onerror: reject });
+      document.head.append(el);
+    });
+    const f = DATA.mapFiles;
+    mapLoading = Promise.all([add('link', { rel: 'stylesheet', href: f.css }), add('script', { src: f.js })])
+      .then(() => add('script', { src: f.app }))
+      .catch(() => { mapBox.innerHTML = '<p class="map-wait">The map couldn’t load. The addresses are listed below.</p>'; });
+    return mapLoading;
+  }
+  if (mapBox && DATA.mapFiles) {
+    new IntersectionObserver((entries, io) => {
+      if (entries.some((e) => e.isIntersecting)) { io.disconnect(); loadMap(); }
+    }, { rootMargin: '400px 0px' }).observe(mapBox);
+    // the address list: jump to that building on the map
+    $$('[data-pin]').forEach((a) => a.addEventListener('click', (e) => {
+      e.preventDefault();
+      mapBox.scrollIntoView({ behavior: reduceMotion.matches ? 'auto' : 'smooth', block: 'center' });
+      loadMap().then(() => window.V.focusPin?.(a.dataset.pin));
+    }));
+  }
+
+  // ---------- card photos: swipe (phones) or arrows (desktop) without opening the home ----------
+  const CARD_PHOTOS = 10;
+  function fillCard(card) {
+    const trackEl = $('.card-track', card);
+    if (!trackEl || trackEl.dataset.filled) return;
+    trackEl.dataset.filled = '1';
+    const h = HOMES[card.dataset.id];
+    if (!h) return;
+    const set = gallerySet(h).slice(0, CARD_PHOTOS);
+    const sizes = trackEl.firstElementChild?.getAttribute('sizes') || '380px';
+    trackEl.insertAdjacentHTML('beforeend', set.slice(1).map((x) => img(x.dir, x.p, sizes, false)).join(''));
+    const dots = $('.card-dots', card);
+    if (dots && set.length > 1) dots.innerHTML = set.map((_, i) => `<i${i ? '' : ' class="on"'}></i>`).join('');
+    syncCard(card);
+  }
+  function syncCard(card) {
+    const t = $('.card-track', card);
+    if (!t) return;
+    const i = Math.round(t.scrollLeft / Math.max(1, t.clientWidth));
+    $$('.card-dots i', card).forEach((d, k) => d.classList.toggle('on', k === i));
+    const prev = $('.card-nav.prev', card);
+    const next = $('.card-nav.next', card);
+    if (prev) prev.disabled = i <= 0;
+    if (next) next.disabled = t.dataset.filled && i >= t.children.length - 1;
+  }
+  const cardIO = new IntersectionObserver((entries) => entries.forEach((e) => {
+    if (e.isIntersecting) { fillCard(e.target); cardIO.unobserve(e.target); }
+  }), { rootMargin: '300px 0px' });
+  $$('#homes .card').forEach((c) => cardIO.observe(c));
+  // 'scroll' doesn't bubble: listen in the capture phase for every card, including the copies under "More homes"
+  document.addEventListener('scroll', (e) => {
+    if (e.target.classList?.contains('card-track')) requestAnimationFrame(() => syncCard(e.target.closest('.card')));
+  }, true);
+  document.addEventListener('click', (e) => {
+    const b = e.target.closest('.card-nav');
+    if (!b) return;
+    const card = b.closest('.card');
+    fillCard(card);
+    const t = $('.card-track', card);
+    t.scrollBy({ left: (b.classList.contains('next') ? 1 : -1) * t.clientWidth, behavior: reduceMotion.matches ? 'auto' : 'smooth' });
+  });
 
   // ---------- open from the address bar: ?home=… (a home) or ?book=1 (the viewing form) ----------
   const q = new URLSearchParams(location.search);

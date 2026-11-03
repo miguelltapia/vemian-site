@@ -360,14 +360,18 @@
         sections: collect({ forEmail: true }).map(({ title, rows }) => ({ title, rows })),
         files: Object.values(files).flat(),
       });
-      try { sessionStorage.removeItem(DRAFT); } catch { /* ignore */ }
+      // Keep the saved answers until the application has really arrived. The email-app fallback (no endpoint in
+      // config.mjs) can't confirm that: on a phone without a mail app set up, nothing is sent at all.
+      if (how === 'sent') { try { sessionStorage.removeItem(DRAFT); } catch { /* ignore */ } }
       $('#app-flow').hidden = true;
       const done = $('#app-done');
       done.hidden = false;
-      $('#done-title').textContent = how === 'sent' ? `Thank you, ${val('firstName')}!` : 'Almost there';
+      $('#done-title').textContent = how === 'sent' ? `Thank you, ${val('firstName')}!` : 'One more step';
       $('#done-text').textContent = how === 'sent'
         ? `Your application for ${homeLabel} is with ${C.person}. He’ll review it and contact you about next steps by phone or email.`
-        : 'Your email app opened with your application filled in. Press send to deliver it, and attach your documents to the same email.';
+        : `Your email app should have opened with your application filled in: press send there, and attach your documents to the same email. If nothing opened, your answers are still here. Go back to them, or text ${C.person} at ${C.phoneLabel}.`;
+      $('#done-back').hidden = how === 'sent';
+      $('#done-home').hidden = how !== 'sent';
       $('#done-adults').hidden = Number(val('adults') || 1) < 2;
       scrollTo({ top: 0, behavior: 'smooth' });
       done.focus();
@@ -380,6 +384,18 @@
       btn.textContent = 'Send my application';
       $('#send-bar').hidden = true;
     }
+  });
+
+  // after the email-app fallback: back to the review step, answers intact
+  $('#done-back').addEventListener('click', () => {
+    $('#app-done').hidden = true;
+    $('#app-flow').hidden = false;
+    const btn = $('#btn-send');
+    btn.disabled = false;
+    btn.textContent = 'Send my application';
+    $('#btn-back').disabled = false;
+    $('#send-status').hidden = true;
+    $('#btn-send').scrollIntoView({ block: 'center' });
   });
 
   // copy the application link for the other adults

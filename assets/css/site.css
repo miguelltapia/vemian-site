@@ -168,6 +168,42 @@ ul { margin: 0; padding: 0; }
   .views-foot { gap: 14px; }
 }
 
+/* ---------- Map (map.js, Leaflet) ---------- */
+.map-sec { padding: clamp(32px, 5vw, 60px) 0 0; }
+.map-head { display: flex; justify-content: space-between; align-items: end; gap: 10px 24px; flex-wrap: wrap; margin-bottom: 16px; }
+.map-head h2 { font-size: var(--step-3); }
+.map-head p { margin-top: 6px; }
+.map-box { position: relative; border-radius: var(--radius-lg); overflow: hidden; border: 1px solid var(--line); background: var(--stone-30); isolation: isolate; }
+.map-canvas { height: clamp(320px, 40vw, 460px); font-family: var(--sans); }
+.map-wait { display: grid; place-items: center; height: 100%; padding: 16px; text-align: center; color: var(--ink-55); font-size: 0.92rem; }
+.map-lock { position: absolute; inset: 0; z-index: 1000; display: flex; align-items: flex-end; justify-content: center; padding: 0 0 16px; border: 0; background: rgb(15 42 33 / 0.06); }
+.map-lock::after { content: "Tap to use the map"; padding: 8px 14px; border-radius: 999px; background: var(--white); color: var(--green); font-size: 0.85rem; font-weight: 600; box-shadow: var(--shadow); }
+.map-list { list-style: none; display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 8px; margin-top: 12px; }
+.map-list a { display: grid; gap: 2px; height: 100%; padding: 10px 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--white); text-decoration: none; transition: border-color 0.2s; }
+.map-list a:hover { border-color: var(--green); }
+.map-list b { font-size: 0.92rem; font-weight: 600; color: var(--green-900); }
+.map-list span { font-size: 0.82rem; color: var(--ink-55); }
+.map-canvas .leaflet-tile-pane { filter: grayscale(0.35) saturate(0.85); }
+.pin span { position: absolute; left: 0; bottom: 0; transform: translate(-50%, -9px); white-space: nowrap; padding: 7px 11px; border-radius: 999px; border: 1.5px solid var(--ivory); background: var(--green); color: var(--ivory); font: 600 0.8rem/1 var(--sans); box-shadow: 0 6px 16px -6px rgb(15 42 33 / 0.6); cursor: pointer; }
+.pin span::after { content: ""; position: absolute; left: 50%; bottom: -6px; width: 9px; height: 9px; background: inherit; border-right: 1.5px solid var(--ivory); border-bottom: 1.5px solid var(--ivory); transform: translateX(-50%) rotate(45deg); }
+.pin-area span { background: var(--gold); color: var(--green-900); }
+.pin-b span { width: 30px; height: 30px; padding: 0; display: grid; place-items: center; font-size: 0.85rem; }
+.map-canvas .leaflet-tooltip { font: 600 0.8rem/1.3 var(--sans); color: var(--green-900); border-radius: 8px; }
+.pin:hover span, .pin:focus-visible span { background: var(--green-700); }
+.pin-area:hover span, .pin-area:focus-visible span { background: var(--gold-light); }
+.pin-pop > b { display: block; font-family: var(--serif); font-size: 1.05rem; font-weight: 500; color: var(--green-900); }
+.pin-pop > span { display: block; margin: 2px 0 10px; font-size: 0.8rem; color: var(--ink-55); }
+.pin-pop ul { list-style: none; display: grid; gap: 6px; }
+.pin-pop button { display: grid; grid-template-columns: 64px 1fr; gap: 10px; align-items: center; width: 100%; padding: 6px; border: 1px solid var(--line); border-radius: 10px; background: var(--white); text-align: left; font: inherit; }
+.pin-pop button:hover { border-color: var(--green); }
+.pin-pop img { width: 64px; height: 48px; object-fit: cover; border-radius: 6px; background: var(--stone-30); }
+.pin-pop button span { font-size: 0.82rem; line-height: 1.35; color: var(--charcoal); }
+.pin-pop button b { font-size: 0.92rem; color: var(--green-900); }
+.pin-pop button b small { font-weight: 500; color: var(--ink-55); }
+.pin-pop button span > small { display: block; margin-top: 2px; font-size: 0.78rem; color: var(--ink-55); }
+.map-canvas .leaflet-popup-content-wrapper { border-radius: 14px; }
+.map-canvas .leaflet-popup-content { margin: 12px 12px 10px; }
+
 /* ---------- Homes ---------- */
 .homes { padding: clamp(28px, 4.5vw, 56px) 0 clamp(40px, 6vw, 80px); }
 .homes-head { display: flex; justify-content: space-between; align-items: end; gap: 16px; flex-wrap: wrap; }
@@ -195,7 +231,7 @@ ul { margin: 0; padding: 0; }
 @media (max-width: 700px) {
   /* on phones the filters take two lines, so they scroll with the page instead of sticking under the header */
   .filters { position: static; padding: 4px 0 0; background: none; border-bottom: 0; backdrop-filter: none; -webkit-backdrop-filter: none; }
-  .filter-row .seg { flex: 1 1 100%; display: flex; }
+  .filter-row .seg { flex: 1 1 100%; display: flex; flex-wrap: wrap; border-radius: 20px; }
   .filter-row { gap: 8px 6px; }
   .filter-row .seg button { flex: 1 1 auto; padding: 8px 8px; font-size: 0.84rem; }
   .filter-row .chip, .filter-row .chip-select select { gap: 5px; padding: 0 10px; font-size: 0.8rem; }
@@ -216,6 +252,21 @@ ul { margin: 0; padding: 0; }
 .card-link:focus-visible { outline-offset: -3px; border-radius: var(--radius-lg); }
 .card-img { position: relative; aspect-ratio: 4 / 3; background: var(--stone-30); overflow: hidden; }
 .card-img img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.9s var(--ease-out); }
+/* photos swipe inside the card (home.js fills .card-track); arrows on hover with a mouse, swipe on touch screens */
+.card-track { display: flex; height: 100%; overflow-x: auto; overflow-y: hidden; scroll-snap-type: x mandatory; scrollbar-width: none; overscroll-behavior-x: contain; }
+.card-track::-webkit-scrollbar { display: none; }
+.card-track > img { flex: 0 0 100%; scroll-snap-align: start; scroll-snap-stop: always; }
+.card-navs { position: absolute; top: 0; left: 0; right: 0; aspect-ratio: 4 / 3; z-index: 2; pointer-events: none; }
+.card-nav { position: absolute; top: 50%; width: 34px; height: 34px; margin-top: -17px; display: grid; place-items: center; padding: 0; border: 0; border-radius: 50%; background: rgb(255 253 249 / 0.94); color: var(--green); box-shadow: 0 4px 12px -4px rgb(15 42 33 / 0.45); pointer-events: auto; opacity: 0; transition: opacity 0.2s; }
+.card-nav .icon { width: 18px; height: 18px; }
+.card-nav.prev { left: 10px; }
+.card-nav.next { right: 10px; }
+.card:hover .card-nav, .card-nav:focus-visible { opacity: 1; }
+.card-nav:disabled { opacity: 0 !important; pointer-events: none; }
+@media (hover: none) { .card-nav { display: none; } }
+.card-dots { position: absolute; left: 50%; bottom: 15px; transform: translateX(-50%); display: flex; gap: 5px; pointer-events: none; }
+.card-dots i { width: 6px; height: 6px; border-radius: 50%; background: rgb(255 253 249 / 0.6); box-shadow: 0 0 0 1px rgb(15 42 33 / 0.18); transition: background 0.2s, transform 0.2s; }
+.card-dots i.on { background: #fff; transform: scale(1.3); }
 .card:hover .card-img img { transform: scale(1.04); }
 .badges { position: absolute; top: 12px; left: 12px; right: 12px; display: flex; justify-content: space-between; gap: 8px; pointer-events: none; }
 .badge { display: inline-flex; align-items: center; gap: 6px; padding: 5px 11px; border-radius: 999px; font-size: 0.78rem; font-weight: 600; background: rgb(255 253 249 / 0.94); color: var(--green); box-shadow: 0 2px 8px rgb(15 42 33 / 0.12); }
@@ -594,6 +645,11 @@ fieldset.field > legend { margin-bottom: 8px; }
 .talk-form textarea:focus, .talk-form input:focus { outline: none; border-color: var(--green); box-shadow: 0 0 0 3px var(--green-15); }
 .talk-form .talk-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .talk-form.tried :invalid { border-color: var(--err); }
+/* phones: out of the way while someone types in a form on the page (common.js sets .typing) */
+@media (max-width: 700px) {
+  .talk { transition: opacity 0.2s, visibility 0.2s; }
+  .talk.typing:not(.open) { opacity: 0; visibility: hidden; pointer-events: none; }
+}
 .talk.open .talk-btn .talk-label { display: none; }
 .talk.open .talk-btn { padding: 6px; }
 .talk-label { transition: opacity 0.2s; }
@@ -732,6 +788,7 @@ fieldset.field > legend { margin-bottom: 8px; }
   .apply-aside { position: static; order: -1; margin-top: 0; }
   .apply-aside .side-help, .apply-aside .side-privacy { display: none; }
   .side-home { display: grid; grid-template-columns: 112px 1fr; box-shadow: none; }
+  .side-home > .bd:only-child { grid-column: 1 / -1; }   /* no home picked yet: no photo, text uses the full width */
   .side-home img { height: 100%; aspect-ratio: auto; }
   .side-home .bd { padding: 12px 14px; }
   .side-home h2 { font-size: 1.05rem; }
@@ -744,7 +801,14 @@ fieldset.field > legend { margin-bottom: 8px; }
   .step-nav .btn { flex: 1; min-width: 0; }
   .rv dl { grid-template-columns: 1fr; gap: 0; }
   .rv dd { margin-bottom: 8px; }
-  .page-apply .talk { bottom: calc(84px + env(safe-area-inset-bottom)); }
+}
+/* Phones and tablets: the floating "Talk to Michael" button would sit on the fields and the Continue bar, so the
+   application shows a help line under its title instead (the chat still opens from it, full screen on phones). */
+.apply-help { display: none; }
+@media (max-width: 960px) {
+  .page-apply .talk:not(.open) .talk-btn { display: none; }
+  .apply-help { display: flex; align-items: center; gap: 8px; margin-top: 12px; font-size: 0.92rem; color: var(--ink-70); }
+  .apply-help .icon { color: var(--green); }
 }
 
 /* 404 */

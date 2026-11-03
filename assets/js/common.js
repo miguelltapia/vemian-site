@@ -192,6 +192,12 @@
       talk.classList.toggle('mini', y > lastY && y > 240);
       lastY = y;
     }, { passive: true });
+    // on phones, step aside while someone types in a form on the page (CSS hides .typing up to 700px wide)
+    const isField = (el) => !!el?.matches?.('input, textarea, select') && !el.closest('.talk');
+    document.addEventListener('focusin', (e) => { if (isField(e.target)) talk.classList.add('typing'); });
+    document.addEventListener('focusout', (e) => {
+      if (isField(e.target)) setTimeout(() => { if (!isField(document.activeElement)) talk.classList.remove('typing'); }, 150);
+    });
     btn.addEventListener('click', () => (panel.hidden ? open() : close()));
     $('.talk-x', talk).addEventListener('click', close);
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !panel.hidden && !$('dialog[open]')) close(); });
@@ -224,12 +230,13 @@
           message: f.message.trim(),
           sections: [{ title: 'Message', rows: [['Name', f.name.trim()], ['Email or phone', f.contact.trim()], ['Message', f.message.trim()]] }],
         });
-        form.reset();
+        // clear the boxes only once the message has really arrived (the email-app fallback can't confirm that)
+        if (how === 'sent') form.reset();
         form.classList.remove('tried');
         const first = f.name.trim().split(' ')[0];
         typingThen(how === 'sent'
           ? `Thanks, ${first}! Got it. I’ll reply by text or email shortly.`
-          : `Thanks, ${first}! Your email app opened with your message. Press send and it comes straight to me.`);
+          : `Thanks, ${first}! Your email app should have opened with your message: press send there. If nothing opened, text me at ${C.phoneLabel}.`);
         track('talk_message_sent', { method: how });
       } catch {
         typingThen(`Sorry, that didn’t go through. Please text me at ${C.phoneLabel}.`, 500);
