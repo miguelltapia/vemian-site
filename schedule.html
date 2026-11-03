@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en-CA">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Showings | Vemian</title>
+<meta name="robots" content="noindex, nofollow, noarchive, nosnippet">
+<meta name="referrer" content="no-referrer">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="preload" href="/assets/fonts/montserrat-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/assets/css/site.css?v=8eb298e6">
+<link rel="stylesheet" href="/assets/css/report.css?v=dae4ff38">
+<link rel="stylesheet" href="/assets/css/schedule.css?v=41c8ce47">
+</head>
+<body class="page-report page-schedule">
+<main>
+  <section class="lock" id="lock">
+    <div class="lock-card">
+      <img src="/assets/brand/vemian-wordmark-56.png" srcset="/assets/brand/vemian-wordmark-112.png 2x" alt="Vemian" width="102" height="30">
+      <h1>Showings</h1>
+      <p>Michael’s showing scheduler.</p>
+      <form id="lock-form">
+        <label class="sr-only" for="lock-pw">Password</label>
+        <input class="input" id="lock-pw" type="password" autocomplete="current-password" placeholder="Password" required>
+        <button class="btn btn-primary btn-block" type="submit">Open</button>
+        <p class="lock-msg" role="alert"></p>
+      </form>
+    </div>
+  </section>
+  <div id="app" hidden></div>
+</main>
+<script type="application/json" id="schedule-data">{"showingsEndpoint":"https://script.google.com/macros/s/AKfycbz8lAMtglLzTk0Vno-vu6xOJ512fGjMU4I6D7TS5iNhcWnq_LhDK70uhpcH3vCLIokIKQ/exec","outlook":"michael@basepointpm.com","prospectFrom":"contact@vemianpm.com","textNumber":"604-213-1171","buildings":[{"id":"braeview-manor","name":"Braeview Manor","street":"1260 Bidwell Street"},{"id":"elliot-towers","name":"Elliot Towers","street":"1350 Broughton Street"},{"id":"heather-house","name":"Heather House","street":"1650 Burnaby Street"},{"id":"kevin-manor","name":"Kevin Manor","street":"1661 Burnaby Street"},{"id":"rosewoods","name":"Rosewoods","street":"1730 Pendrell Street"},{"id":"independent-at-main","name":"The Independent at Main","street":"2508 Watson Street"},{"id":"w18-house","name":"Character house, West 18th Avenue","street":"West 18th Avenue at Yukon Street"},{"id":"w71-911","name":"911 West 71st Avenue","street":"911 West 71st Avenue"},{"id":"bayside-towers","name":"Bayside Towers","street":"1846 Nelson Street"}],"homes":[{"id":"bm-1502","b":"braeview-manor","unit":"1502","label":"2 bed · $4,500"},{"id":"et-1200","b":"elliot-towers","unit":"1200","label":"2 bed · $4,500"},{"id":"et-503","b":"elliot-towers","unit":"503","label":"1 bed · $2,650"},{"id":"et-1003","b":"elliot-towers","unit":"1003","label":"1 bed · $2,600"},{"id":"et-202","b":"elliot-towers","unit":"202","label":"1 bed · $2,195"},{"id":"bm-801","b":"braeview-manor","unit":"801","label":"1 bed · $2,310"},{"id":"hh-708","b":"heather-house","unit":"708","label":"1 bed · $2,295"},{"id":"hh-903","b":"heather-house","unit":"903","label":"1 bed · $2,250"},{"id":"km-101","b":"kevin-manor","unit":"101","label":"2 bed · $3,795"},{"id":"rw-308","b":"rosewoods","unit":"308","label":"1 bed + den · $2,850"},{"id":"watson-302","b":"independent-at-main","unit":"302","label":"2 bed + flex · $3,150"},{"id":"w18-main","b":"w18-house","unit":"Main floor","label":"2 bed · $3,000"},{"id":"w71-2","b":"w71-911","unit":"2","label":"Studio · $1,580"}]}</script>
+<script src="/assets/js/schedule.js?v=2227a898" defer></script>
+</body>
+</html>
