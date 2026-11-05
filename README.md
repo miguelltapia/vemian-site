@@ -16,4 +16,4 @@ This folder is made by `source/build.mjs` in the VEMIAN `Website` folder (last b
 
 Run the build, then in GitHub Desktop: write a short summary (for example "Rent update"), click **Commit to main**, then **Push origin**. Vercel publishes it in about a minute.
 
-The GitHub website can only take 100 files per upload and this folder has 842, so use GitHub Desktop rather than the browser.
+The GitHub website can only take 100 files per upload and this folder has 876, so use GitHub Desktop rather than the browser.
