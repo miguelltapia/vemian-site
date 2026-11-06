@@ -2,7 +2,7 @@
 
 The Vemian website: homes for rent in Vancouver, with an online rental application. Plain HTML, CSS and JavaScript; Vercel serves it with clean URLs (`/apply` serves `apply.html`). There's no build step on Vercel.
 
-This folder is made by `source/build.mjs` in the VEMIAN `Website` folder (last built 2026-11-04). To change the homes, edit `source/listings.mjs` there and run `node source/build.mjs`: this folder is refreshed and GitHub Desktop shows what changed. Don't edit the files here; the next build replaces them.
+This folder is made by `source/build.mjs` in the VEMIAN `Website` folder (last built 2026-11-05). To change the homes, edit `source/listings.mjs` there and run `node source/build.mjs`: this folder is refreshed and GitHub Desktop shows what changed. Don't edit the files here; the next build replaces them.
 
 ## First upload (GitHub Desktop)
 
@@ -16,4 +16,4 @@ This folder is made by `source/build.mjs` in the VEMIAN `Website` folder (last b
 
 Run the build, then in GitHub Desktop: write a short summary (for example "Rent update"), click **Commit to main**, then **Push origin**. Vercel publishes it in about a minute.
 
-The GitHub website can only take 100 files per upload and this folder has 864, so use GitHub Desktop rather than the browser.
+The GitHub website can only take 100 files per upload and this folder has 933, so use GitHub Desktop rather than the browser.

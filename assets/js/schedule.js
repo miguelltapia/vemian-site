@@ -1,7 +1,8 @@
 // Michael's showing scheduler (/schedule, not linked, not indexed). The page holds no secrets: the password, the
 // managers' emails and the exact addresses are in the "Vemian showings" Google script (form-backend/Showings.gs),
 // which checks the password on every request, books, moves and cancels the calendar events (Outlook is invited)
-// and sends the emails. Every showing is 15 minutes, in Vancouver time: UTC−7 all year since BC's permanent
+// and sends the emails, including the thank-you email to the prospect 30 minutes after each showing starts (not
+// for a cancelled one). Every showing is 15 minutes, in Vancouver time: UTC−7 all year since BC's permanent
 // daylight time (2026).
 (() => {
   const $ = (s, r = document) => r.querySelector(s);
@@ -12,6 +13,7 @@
   const OFFSET = -7;                    // Vancouver, all year
   let PW = '';
   let MANAGERS = {};
+  let THANKS = null;                    // is the script's thank-you trigger on? (false until setup has run)
 
   // ---------- Vancouver time ----------
   const vanToday = () => new Date(Date.now() + OFFSET * 3600000).toISOString().slice(0, 10);
@@ -40,7 +42,10 @@
     s.outlook && `${esc(D.outlook)} told`,
     s.prospect && `prospect emailed from ${esc(s.prospect)}`,
     s.manager && (/^not sent/.test(s.manager) ? `manager ${esc(s.manager)}` : `manager told at ${esc(s.manager)}`),
+    s.thankAt && `thank-you email to the prospect at ${esc(s.thankAt)}`,
   ].filter(Boolean).join(' · ');
+  // the thank-you email, as the list shows it (an older script sends no thank-you fields: show nothing)
+  const thankText = (s) => !s.thankAt ? '' : s.thank === false ? 'No thank-you email' : s.thanked ? 'Thank-you email sent' : `Thank-you email at ${s.thankAt}, unless you cancel`;
 
   // ---------- lock ----------
   const lock = $('#lock');
@@ -55,6 +60,7 @@
     try {
       const r = await call('ping');
       MANAGERS = r.managers || {};
+      THANKS = r.thanks;
       try { sessionStorage.setItem(SAVED, password); } catch { /* storage blocked */ }
       lock.hidden = true;
       app.hidden = false;
@@ -95,6 +101,7 @@
             <label class="check"><input type="checkbox" id="sc-p" checked> <span><b>Confirmation to the prospect</b>, from ${esc(D.prospectFrom)}: the listing, the address and a tap-to-text link to ${esc(D.textNumber)}</span></label>
             <label class="check"><input type="checkbox" id="sc-m" checked> <span><b>Note to the building manager</b>, from your Gmail: building, unit, day and time only <em id="sc-mgr"></em></span></label>
             <label class="check"><input type="checkbox" id="sc-o" checked> <span><b>Invitation to ${esc(D.outlook)}</b> with the listing, to accept in Outlook</span></label>
+            <label class="check"><input type="checkbox" id="sc-t" checked> <span><b>Thank-you email to the prospect</b>, from ${esc(D.prospectFrom)}, 30 minutes after the showing starts: the listing and the link to apply. Not sent if you cancel the showing. ${THANKS === false ? '<em>(Off until you run setup once in the Google script.)</em>' : ''}</span></label>
           </fieldset>
           <p class="sc-when" id="sc-when" aria-live="polite"></p>
           <button class="btn btn-primary btn-block" type="submit" id="sc-go">Schedule showing</button>
@@ -145,9 +152,9 @@
       const bld = D.buildings.find((x) => x.id === b.value);
       try {
         const r = await call('schedule', {
-          building: b.value, buildingName: bld?.name, address: bld?.street ? `${bld.street}, Vancouver, BC` : '', unit, home: home ? home.id : '', email,
+          building: b.value, buildingName: bld?.name, address: bld?.street ? `${bld.street}, Vancouver, BC` : '', area: bld?.area || '', unit, home: home ? home.id : '', email,
           date: $('#sc-date').value, time: $('#sc-time').value, note: $('#sc-note').value.trim(),
-          emailProspect: $('#sc-p').checked, emailManager: $('#sc-m').checked, outlook: $('#sc-o').checked,
+          emailProspect: $('#sc-p').checked, emailManager: $('#sc-m').checked, outlook: $('#sc-o').checked, thankYou: $('#sc-t').checked,
         });
         out.className = 'form-msg sc-done';
         out.innerHTML = `<b>Scheduled: ${esc(r.place)}, ${esc(r.when)}.</b><br>${sentText(r.sent)}`;
@@ -175,7 +182,7 @@
       const r = await call('list');
       ITEMS = r.showings || [];
       box.innerHTML = ITEMS.length ? `<ul class="sc-items">${ITEMS.map((s, i) => `<li data-i="${i}">
-          <b>${esc(s.when)}</b><span>${esc(s.title)}</span>${s.prospect ? `<small>${esc(s.prospect)}</small>` : ''}
+          <b>${esc(s.when)}</b><span>${esc(s.title)}</span>${s.prospect ? `<small>${esc(s.prospect)}</small>` : ''}${thankText(s) ? `<small>${esc(thankText(s))}</small>` : ''}
           <div class="sc-acts"><button type="button" class="btn btn-ghost btn-sm" data-act="move">Reschedule</button><button type="button" class="btn btn-ghost btn-sm sc-cancel" data-act="cancel">Cancel</button></div>
           <div class="sc-move" hidden>
             <div class="row-2"><div class="field"><label>New day</label><input class="input" type="date" min="${vanToday()}" value="${esc(s.date || vanToday())}"></div>
@@ -199,7 +206,7 @@
     const busy = (on, label) => { $$('button', li).forEach((x) => { x.disabled = on; }); if (on) btn.innerHTML = `<span class="spinner"></span> ${label}`; };
     try {
       if (btn.dataset.act === 'cancel') {
-        if (!confirm(`Cancel the showing at ${s.title}, ${s.when}?\n\nThe prospect, the building manager and ${D.outlook} will be told.`)) return;
+        if (!confirm(`Cancel the showing at ${s.title}, ${s.when}?\n\nThe prospect, the building manager and ${D.outlook} will be told${s.thankAt && !s.thanked ? ', and no thank-you email will go out' : ''}.`)) return;
         busy(true, 'Cancelling…');
         const r = await call('cancel', { id: s.id });
         out.className = 'form-msg sc-done';
