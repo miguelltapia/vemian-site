@@ -26,7 +26,7 @@
 <link rel="preload" href="/assets/fonts/playfair-display-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/assets/fonts/montserrat-latin.woff2" as="font" type="font/woff2" crossorigin>
 
-<link rel="stylesheet" href="/assets/css/site.css?v=8eb298e6">
+<link rel="stylesheet" href="/assets/css/site.css?v=faf372b2">
 <script>window.VEMIAN={"site":"https://www.vemianpm.com","name":"Vemian","person":"Michael","email":"contact@vemianpm.com","phone":"+16042131171","phoneLabel":"604-213-1171","endpoint":"https://script.google.com/macros/s/AKfycbyJr0C24k7X9bz4953AOlt0efNufII1FzqTUp5Xsox7jaLjT0-w6bpN8DZYeHiTwjYi_g/exec","alwaysActive":true,"hours":{"days":[1,2,3,4,5,6],"start":9,"end":19,"tz":"America/Vancouver"}}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebPage","@id":"https://www.vemianpm.com/apply#webpage","url":"https://www.vemianpm.com/apply","name":"Rental Application | Vemian","description":"Apply online for a Vancouver rental with Vemian: one short form per adult, about 10 minutes, documents optional. Your information goes only to Michael.","isPartOf":{"@id":"https://www.vemianpm.com/#website"},"inLanguage":"en-CA"},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Homes for rent","item":"https://www.vemianpm.com/"},{"@type":"ListItem","position":2,"name":"Rental application","item":"https://www.vemianpm.com/apply"}]}]}</script>
 </head>
@@ -64,6 +64,7 @@
       </details>
 
       <div id="app-flow">
+        <div class="callout ok co-banner" id="co-banner" hidden><svg class="icon" aria-hidden="true"><use href="#i-info"/></svg><span id="co-banner-text"></span></div>
         <div class="restore" id="restored" hidden><span>We kept your answers from earlier in this tab.</span><button type="button" class="link" data-restart>Start over</button></div>
         <div class="progress">
           <div class="progress-top"><b id="prog-title">The home</b><span id="prog-step">Step 1 of 7</span></div>
@@ -134,11 +135,11 @@
   
   <p class="err" id="a-firstName-e">Please fill this in.</p>
 </div>
-                <div class="field" data-label="Middle initial">
-  <label for="a-middleInitial">M.I.</label>
-  <input class="input" id="a-middleInitial" name="middleInitial" type="text" autocomplete="additional-name" aria-describedby="a-middleInitial-e" maxlength="2">
+                <div class="field" data-label="Middle name">
+  <label for="a-middleName">Middle name</label>
+  <input class="input" id="a-middleName" name="middleName" type="text" autocomplete="additional-name" aria-describedby="a-middleName-e" >
   
-  <p class="err" id="a-middleInitial-e">Please fill this in.</p>
+  <p class="err" id="a-middleName-e">Please fill this in.</p>
 </div>
                 <div class="field" data-label="Last name">
   <label for="a-lastName">Last name</label>
@@ -205,10 +206,10 @@
             </div>
           </section>
 
-          <section class="step" data-index="2" data-title="Who’s moving in" aria-labelledby="st2" hidden>
-            <div class="step-head"><h2 id="st2" tabindex="-1">Who’s moving in</h2><p>Everyone who will live in the home.</p></div>
-            <div class="stack" data-section="Who’s moving in" style="gap:20px">
-              <div class="row-2">
+          <section class="step" data-index="2" data-title="Who’s moving in" data-co-title="Smoking &amp; car" aria-labelledby="st2" hidden>
+            <div class="step-head"><h2 id="st2" tabindex="-1" data-co-text="Smoking and your car">Who’s moving in</h2><p data-co-text="{with} already told us who’s moving in.">Everyone who will live in the home.</p></div>
+            <div class="stack" data-section="Who’s moving in" style="gap:20px" data-shared>
+              <div class="row-2" data-shared>
                 <div class="field" data-label="Adults (19+)">
   <label for="a-adults">Adults (19+) living in the home</label>
   <select class="select" id="a-adults" name="adults" required aria-describedby="a-adults-e" ><option value=""></option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option></select>
@@ -222,7 +223,7 @@
   <p class="err" id="a-minors-e">Please choose one.</p>
 </div>
               </div>
-              <div class="renters">
+              <div class="renters" data-shared>
                 <p class="label" style="font-weight:600;font-size:.9rem">Full names of all adults renting, including you</p>
                 <div class="renter-you">Renter #1: <b id="renter-you">You (from step 2)</b></div>
                 <div class="field" data-renter="2" data-label="Renter #2" hidden><label for="a-renter2">Renter #2: full name</label><input class="input" id="a-renter2" name="renter2" autocomplete="off"><p class="err">Please add their full name.</p></div>
@@ -232,17 +233,34 @@
                 <div class="field" data-renter="6" data-label="Renter #6" hidden><label for="a-renter6">Renter #6: full name</label><input class="input" id="a-renter6" name="renter6" autocomplete="off"><p class="err">Please add their full name.</p></div>
                 <div class="callout ok" id="extra-adults" hidden><svg class="icon" aria-hidden="true"><use href="#i-info"/></svg><span>Each adult fills in their own application too. <button type="button" class="link" data-share-link>Copy the link for them</button></span></div>
               </div>
+              <div id="co-q" hidden>
+                <fieldset class="field" data-check="choice" data-req="1" data-label="Co-applicant">
+  <legend class="label">Will Renter #2 apply with you on the same form?</legend>
+  <p class="hint">Forth Gen’s application form has room for two applicants. Your co-applicant adds their own details and signature right after you, and Michael gets one form with both of you.</p>
+  <div class="choice"><label><input type="radio" name="coApplicant" value="no"> No, they’ll apply on their own</label><label><input type="radio" name="coApplicant" value="here"> Yes, and they’re here with me now</label><label><input type="radio" name="coApplicant" value="link"> Yes, I’ll text them a link for their phone</label></div>
+  <p class="err">Please choose one.</p>
+</fieldset>
+              </div>
+              <div class="renters" id="minor-names" hidden>
+                <p class="label" style="font-weight:600;font-size:.9rem">Full names of the children</p>
+                <div class="field" data-minor="1" data-label="Child #1" hidden><label for="a-minor1">Child #1: full name</label><input class="input" id="a-minor1" name="minor1" autocomplete="off"><p class="err">Please add their full name.</p></div>
+                <div class="field" data-minor="2" data-label="Child #2" hidden><label for="a-minor2">Child #2: full name</label><input class="input" id="a-minor2" name="minor2" autocomplete="off"><p class="err">Please add their full name.</p></div>
+                <div class="field" data-minor="3" data-label="Child #3" hidden><label for="a-minor3">Child #3: full name</label><input class="input" id="a-minor3" name="minor3" autocomplete="off"><p class="err">Please add their full name.</p></div>
+                <div class="field" data-minor="4" data-label="Child #4" hidden><label for="a-minor4">Child #4: full name</label><input class="input" id="a-minor4" name="minor4" autocomplete="off"><p class="err">Please add their full name.</p></div>
+                <div class="field" data-minor="5" data-label="Child #5" hidden><label for="a-minor5">Child #5: full name</label><input class="input" id="a-minor5" name="minor5" autocomplete="off"><p class="err">Please add their full name.</p></div>
+                <div class="field" data-minor="6" data-label="Child #6" hidden><label for="a-minor6">Child #6: full name</label><input class="input" id="a-minor6" name="minor6" autocomplete="off"><p class="err">Please add their full name.</p></div>
+              </div>
             </div>
             <div class="sub" data-section="Pets and smoking">
-              <h3>Pets and smoking</h3>
-              <fieldset class="field" data-check="choice" data-req="1" data-label="Pets">
+              <h3 data-co-text="Smoking">Pets and smoking</h3>
+              <fieldset class="field" data-check="choice" data-req="1" data-label="Pets" data-shared>
   <legend class="label">Do you have pets?</legend>
   
   <div class="choice"><label><input type="radio" name="pets" value="yes"> Yes</label><label><input type="radio" name="pets" value="no"> No</label></div>
   <p class="err">Please choose one.</p>
 </fieldset>
               <div class="callout" id="pets-warn" hidden><svg class="icon" aria-hidden="true"><use href="#i-info"/></svg><span>Heads up: the home you picked doesn’t allow pets.</span></div>
-              <div class="field" data-label="About the pets" data-show-if="pets=yes" hidden>
+              <div class="field" data-label="About the pets" data-show-if="pets=yes" hidden data-shared>
   <label for="a-petsAbout">Tell us about your pets</label>
   <textarea class="textarea" id="a-petsAbout" name="petsAbout" rows="3" required aria-describedby="a-petsAbout-h a-petsAbout-e" ></textarea>
   <p class="hint" id="a-petsAbout-h">Type, breed, age and size.</p>
@@ -289,6 +307,7 @@
   <p class="err" id="a-carYear-e">Please fill this in.</p>
 </div>
               </div>
+              <div class="field" data-label="Parking stall" data-show-if="car=yes" data-rentbc hidden><label class="check"><input type="checkbox" name="parking"> I need a parking stall ($120 a month)</label></div>
             </div>
           </section>
 
@@ -324,6 +343,12 @@
   <p class="err" id="a-province-e">Please choose one.</p>
 </div>
                 </div>
+                <div class="field" data-label="Postal code" data-rentbc>
+  <label for="a-postal">Postal or ZIP code</label>
+  <input class="input" id="a-postal" name="postal" type="text" required autocomplete="postal-code" aria-describedby="a-postal-e" maxlength="10" autocapitalize="characters" style="max-width:220px">
+  
+  <p class="err" id="a-postal-e">Please fill this in.</p>
+</div>
                 <div class="row-2">
                   <fieldset class="field" data-check="ym" data-name="movedIn" data-req="1" data-label="Moved in (mm/yyyy)">
   <legend class="label">When did you move in?</legend>
@@ -369,6 +394,18 @@
   <p class="err" id="a-landlordEmail-e">Enter an email like name@example.com.</p>
 </div>
                   </div>
+                  <div class="field" data-label="Landlord’s address" data-rentbc>
+  <label for="a-landlordAddress">Landlord’s or building manager’s address <span class="opt">(optional)</span></label>
+  <input class="input" id="a-landlordAddress" name="landlordAddress" type="text" aria-describedby="a-landlordAddress-e" >
+  
+  <p class="err" id="a-landlordAddress-e">Please fill this in.</p>
+</div>
+                  <div class="field" data-label="Current rent" data-rentbc>
+  <label for="a-currentRent">Your monthly rent</label>
+  <input class="input" id="a-currentRent" name="currentRent" type="text" required placeholder="$" aria-describedby="a-currentRent-e" inputmode="numeric" data-money style="max-width:220px">
+  
+  <p class="err" id="a-currentRent-e">Please fill this in.</p>
+</div>
                 </div>
                 <div class="reveal" data-show-if="tenure=own" hidden>
                   <div class="field" data-label="Legal name on title">
@@ -413,6 +450,12 @@
   
   <p class="err" id="a-reason-e">Please fill this in.</p>
 </div>
+              <fieldset class="field" data-check="choice" data-req="1" data-label="Has tenant insurance" data-rentbc data-shared>
+  <legend class="label">Do you have tenant insurance now?</legend>
+  <p class="hint">Insurance for your belongings and for liability. You’ll need it once you move in.</p>
+  <div class="choice"><label><input type="radio" name="insured" value="yes"> Yes</label><label><input type="radio" name="insured" value="no"> No</label></div>
+  <p class="err">Please choose one.</p>
+</fieldset>
             </div>
             <div class="sub" id="prev-home" data-section="Previous home" hidden>
               <h3>Your previous home</h3>
@@ -437,6 +480,38 @@
   <p class="err" id="a-prevProvince-e">Please choose one.</p>
 </div>
               </div>
+              <div class="field" data-label="Previous postal code" data-rentbc>
+  <label for="a-prevPostal">Postal or ZIP code <span class="opt">(optional)</span></label>
+  <input class="input" id="a-prevPostal" name="prevPostal" type="text" aria-describedby="a-prevPostal-e" maxlength="10" autocapitalize="characters" style="max-width:220px">
+  
+  <p class="err" id="a-prevPostal-e">Please fill this in.</p>
+</div>
+              <fieldset class="field" data-check="choice" data-label="Previous home: rent or own" data-rentbc>
+  <legend class="label">Did you rent or own it? <span class="opt">(optional)</span></legend>
+  
+  <div class="choice"><label><input type="radio" name="prevTenure" value="rent"> I rented</label><label><input type="radio" name="prevTenure" value="own"> I owned</label><label><input type="radio" name="prevTenure" value="family"> I lived with family or friends</label></div>
+  <p class="err">Please choose one.</p>
+</fieldset>
+              <div class="row-2" data-rentbc>
+                <div class="field" data-label="Time at the previous address">
+  <label for="a-prevHowLong">How long did you live there? <span class="opt">(optional)</span></label>
+  <input class="input" id="a-prevHowLong" name="prevHowLong" type="text" placeholder="For example 3 years" aria-describedby="a-prevHowLong-e" >
+  
+  <p class="err" id="a-prevHowLong-e">Please fill this in.</p>
+</div>
+                <div class="field" data-label="Previous rent" data-show-if="prevTenure=rent" hidden>
+  <label for="a-prevRent">Monthly rent there <span class="opt">(optional)</span></label>
+  <input class="input" id="a-prevRent" name="prevRent" type="text" placeholder="$" aria-describedby="a-prevRent-e" inputmode="numeric" data-money>
+  
+  <p class="err" id="a-prevRent-e">Please fill this in.</p>
+</div>
+              </div>
+              <div class="field" data-label="Reason for leaving the previous home" data-rentbc>
+  <label for="a-prevReason">Why did you leave? <span class="opt">(optional)</span></label>
+  <input class="input" id="a-prevReason" name="prevReason" type="text" aria-describedby="a-prevReason-e" >
+  
+  <p class="err" id="a-prevReason-e">Please fill this in.</p>
+</div>
               <div class="row-3">
                 <div class="field" data-label="Previous landlord">
   <label for="a-prevLandlord">Landlord’s name <span class="opt">(optional)</span></label>
@@ -457,6 +532,12 @@
   <p class="err" id="a-prevLandlordEmail-e">Enter an email like name@example.com.</p>
 </div>
               </div>
+              <div class="field" data-label="Previous landlord’s address" data-rentbc>
+  <label for="a-prevLandlordAddress">Previous landlord’s address <span class="opt">(optional)</span></label>
+  <input class="input" id="a-prevLandlordAddress" name="prevLandlordAddress" type="text" aria-describedby="a-prevLandlordAddress-e" >
+  
+  <p class="err" id="a-prevLandlordAddress-e">Please fill this in.</p>
+</div>
             </div>
           </section>
 
@@ -475,6 +556,28 @@
   <input class="input" id="a-employer" name="employer" type="text" autocomplete="organization" aria-describedby="a-employer-e" >
   
   <p class="err" id="a-employer-e">Please fill this in.</p>
+</div>
+              </div>
+              <fieldset class="field" data-check="ym" data-name="jobStart" data-label="Started this job (mm/yyyy)" data-rentbc>
+  <legend class="label">When did you start there? <span class="opt">(optional)</span></legend>
+  <div class="date2">
+    <div><input class="input" id="jobStart-m" name="jobStartM" inputmode="numeric" maxlength="2" placeholder="MM" aria-label="When did you start there?: month" data-auto-next="jobStart-y"><span>Month</span></div>
+    <div><input class="input" id="jobStart-y" name="jobStartY" inputmode="numeric" maxlength="4" placeholder="YYYY" aria-label="When did you start there?: year"><span>Year</span></div>
+  </div>
+  <p class="err">Enter the month and year, like 03 2024.</p>
+</fieldset>
+              <div class="row-2" data-rentbc>
+                <div class="field" data-label="Supervisor">
+  <label for="a-supervisor">Supervisor’s name <span class="opt">(optional)</span></label>
+  <input class="input" id="a-supervisor" name="supervisor" type="text" aria-describedby="a-supervisor-e" >
+  
+  <p class="err" id="a-supervisor-e">Please fill this in.</p>
+</div>
+                <div class="field" data-label="Supervisor’s phone">
+  <label for="a-supervisorPhone">Supervisor’s phone <span class="opt">(optional)</span></label>
+  <input class="input" id="a-supervisorPhone" name="supervisorPhone" type="tel" aria-describedby="a-supervisorPhone-e" inputmode="tel">
+  
+  <p class="err" id="a-supervisorPhone-e">Enter a phone number with the area code.</p>
 </div>
               </div>
               <div class="row-2">
@@ -511,6 +614,52 @@
   <p class="hint" id="a-otherIncome-h">For example savings, family support or student funding.</p>
   <p class="err" id="a-otherIncome-e">Please fill this in.</p>
 </div>
+            </div>
+            <div class="sub" data-section="Previous job" data-rentbc>
+              <h3>Previous job <span class="opt">(optional)</span></h3>
+              <p class="hint">Worth adding if you’ve been in your current job for less than 2 years.</p>
+              <div class="row-2">
+                <div class="field" data-label="Previous job">
+  <label for="a-prevPosition">Job <span class="opt">(optional)</span></label>
+  <input class="input" id="a-prevPosition" name="prevPosition" type="text" aria-describedby="a-prevPosition-e" >
+  
+  <p class="err" id="a-prevPosition-e">Please fill this in.</p>
+</div>
+                <div class="field" data-label="Previous company">
+  <label for="a-prevEmployer">Company name <span class="opt">(optional)</span></label>
+  <input class="input" id="a-prevEmployer" name="prevEmployer" type="text" aria-describedby="a-prevEmployer-e" >
+  
+  <p class="err" id="a-prevEmployer-e">Please fill this in.</p>
+</div>
+              </div>
+              <div class="row-2">
+                <div class="field" data-label="Previous annual income">
+  <label for="a-prevIncome">Annual income (before tax) <span class="opt">(optional)</span></label>
+  <input class="input" id="a-prevIncome" name="prevIncome" type="text" placeholder="$" aria-describedby="a-prevIncome-e" inputmode="numeric" data-money>
+  
+  <p class="err" id="a-prevIncome-e">Please fill this in.</p>
+</div>
+                <div class="field" data-label="Time at the previous job">
+  <label for="a-prevJobLength">How long did you work there? <span class="opt">(optional)</span></label>
+  <input class="input" id="a-prevJobLength" name="prevJobLength" type="text" placeholder="For example 2 years" aria-describedby="a-prevJobLength-e" >
+  
+  <p class="err" id="a-prevJobLength-e">Please fill this in.</p>
+</div>
+              </div>
+              <div class="row-2">
+                <div class="field" data-label="Previous supervisor">
+  <label for="a-prevSupervisor">Supervisor’s name <span class="opt">(optional)</span></label>
+  <input class="input" id="a-prevSupervisor" name="prevSupervisor" type="text" aria-describedby="a-prevSupervisor-e" >
+  
+  <p class="err" id="a-prevSupervisor-e">Please fill this in.</p>
+</div>
+                <div class="field" data-label="Previous supervisor’s phone">
+  <label for="a-prevSupervisorPhone">Supervisor’s phone <span class="opt">(optional)</span></label>
+  <input class="input" id="a-prevSupervisorPhone" name="prevSupervisorPhone" type="tel" aria-describedby="a-prevSupervisorPhone-e" inputmode="tel">
+  
+  <p class="err" id="a-prevSupervisorPhone-e">Enter a phone number with the area code.</p>
+</div>
+              </div>
             </div>
             <div class="sub" data-section="Emergency contact">
               <h3>Emergency contact <span class="opt">(optional)</span></h3>
@@ -605,6 +754,18 @@
               <label class="check"><input type="checkbox" name="agree2"> By checking this box, I agree to Agreement #2</label>
               <p class="err">Please agree to continue.</p>
             </div>
+            <div class="sign-box" id="rb-sign" data-rentbc hidden>
+              <h3>Sign Forth Gen’s application form</h3>
+              <div class="rb-summary" id="rb-summary"></div>
+              <div class="field sig-field" data-check="sig" data-label="Signature" id="sig">
+                <p class="label" id="sig-l">Your signature</p>
+                <div class="sig-pad"><canvas role="img" aria-labelledby="sig-l sig-h"></canvas><span class="sig-line" aria-hidden="true">Sign here</span></div>
+                <p class="hint" id="sig-h">Draw your signature with your finger or mouse.</p>
+                <div class="sig-tools"><button type="button" class="link" data-sig-clear>Clear</button><button type="button" class="link" data-sig-mode>Type your name instead</button></div>
+                <div class="sig-typed" hidden><label for="sig-typed">Type your full name to sign</label><input class="input" id="sig-typed" autocomplete="off" spellcheck="false"><p class="hint">Typing your name here is your electronic signature.</p></div>
+                <p class="err">Please sign above, or type your name.</p>
+              </div>
+            </div>
             <label class="check"><input type="checkbox" name="alerts"> I would like to receive email notifications for exclusive rentals before they are listed to the public.</label>
             <input class="hp" name="company" tabindex="-1" autocomplete="off" aria-hidden="true">
             <div class="send-status" id="send-status" hidden><div class="send-bar" id="send-bar"><i></i></div><p class="form-msg" id="send-msg" role="status"></p></div>
@@ -622,6 +783,11 @@
         <div class="done-icon"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg></div>
         <h2 id="done-title">Thank you!</h2>
         <p id="done-text"></p>
+        <div class="done-co" id="done-co" hidden>
+          <p id="done-co-text"></p>
+          <input class="input" id="co-link" readonly aria-label="Link for your co-applicant">
+          <div class="btns"><a class="btn btn-primary" id="co-start" href="/apply">Start their part</a><button type="button" class="btn btn-ghost" id="co-share">Send them the link</button></div>
+        </div>
         <p id="done-adults" hidden>Other adults moving in need to fill in their own application. <button type="button" class="link" data-share-link>Copy the link for them</button></p>
         <div class="btns"><button type="button" class="btn btn-primary" id="done-back" hidden>Back to my application</button><a class="btn btn-primary" href="/" id="done-home">See all homes</a><button type="button" class="btn btn-ghost" data-talk>Message Michael</button></div>
       </div>
@@ -674,7 +840,7 @@
 </footer>
 <dialog class="sheet" id="privacy" aria-labelledby="pv-title">
   <button type="button" class="icon-btn dlg-close" data-close aria-label="Close"><svg class="icon" aria-hidden="true"><use href="#i-x"/></svg></button>
-  <div class="sheet-head"><h2 id="pv-title">Privacy notice</h2><p>How Vemian handles your information. Updated November 8, 2026.</p></div>
+  <div class="sheet-head"><h2 id="pv-title">Privacy notice</h2><p>How Vemian handles your information. Updated November 9, 2026.</p></div>
   <div class="sheet-body prose">
     <h3>What we collect</h3>
     <p>Only what you send us: your name and contact details when you message us or book a viewing, and, when you apply, the answers on the application (such as your date of birth, current and past addresses and landlords, work and income, and an emergency contact) plus any documents you choose to upload. Your Social Insurance Number and driver’s licence number are optional.</p>
@@ -729,8 +895,9 @@
     <span class="talk-label"><b>Talk to Michael</b><small data-status>Active now</small></span>
   </button>
 </div>
-<script type="application/json" id="apply-data">{"bm-1502":{"t":"2 bed, 2 bath, 1,200 sq ft","name":"Braeview Manor #1502","street":"1260 Bidwell Street","area":"West End","rent":4500,"av":"now","pets":false,"img":"/assets/photos/bm-1502/01-800.webp?v=9a314981"},"et-1200":{"t":"2 bed, 2 bath, 1,200 sq ft","name":"Elliot Towers #1200","street":"1350 Broughton Street","area":"West End","rent":4500,"av":"2026-12-01","pets":false,"img":"/assets/photos/et-1200/01-800.webp?v=8ff29af2"},"et-503":{"t":"1 bed, 1 bath, 630 sq ft","name":"Elliot Towers #503","street":"1350 Broughton Street","area":"West End","rent":2595,"av":"now","pets":false,"img":"/assets/photos/et-503/01-800.webp?v=abb0e978"},"et-1003":{"t":"1 bed, 1 bath, 650 sq ft","name":"Elliot Towers #1003","street":"1350 Broughton Street","area":"West End","rent":2500,"av":"now","pets":false,"img":"/assets/photos/et-1003/01-800.webp?v=fb5bdc5b"},"et-202":{"t":"1 bed, 1 bath, 625 sq ft","name":"Elliot Towers #202","street":"1350 Broughton Street","area":"West End","rent":2160,"av":"now","pets":false,"img":"/assets/photos/et-202/01-800.webp?v=b8a43a99"},"et-901":{"t":"1 bed, 1 bath, 625 sq ft","name":"Elliot Towers #901","street":"1350 Broughton Street","area":"West End","rent":2300,"av":"2026-12-01","pets":false,"img":"/assets/photos/et-901/01-800.webp?v=7b3bcfa2"},"bm-801":{"t":"1 bed, 1 bath, 450 sq ft","name":"Braeview Manor #801","street":"1260 Bidwell Street","area":"West End","rent":2290,"av":"now","pets":false,"img":"/assets/photos/bm-801/01-800.webp?v=08a6aa10"},"bm-502":{"t":"2 bed, 2 bath, 925 sq ft","name":"Braeview Manor #502","street":"1260 Bidwell Street","area":"West End","rent":3545,"av":"2027-02-01","pets":false,"img":"/assets/photos/bm-502/01-800.webp?v=fa2d57d3"},"bm-704":{"t":"1 bed, 1 bath, 650 sq ft","name":"Braeview Manor #704","street":"1260 Bidwell Street","area":"West End","rent":2450,"av":"2026-12-01","pets":false,"img":"/assets/photos/bm-704/01-800.webp?v=16157a7d"},"hh-708":{"t":"1 bed, 1 bath, 450 sq ft","name":"Heather House #708","street":"1650 Burnaby Street","area":"West End","rent":2245,"av":"now","pets":false,"img":"/assets/photos/hh-708/01-800.webp?v=d9ba1609"},"hh-903":{"t":"1 bed, 1 bath, 500 sq ft","name":"Heather House #903","street":"1650 Burnaby Street","area":"West End","rent":2205,"av":"now","pets":false,"img":"/assets/photos/hh-903/01-800.webp?v=c2ecb0d7"},"hh-1403":{"t":"1 bed, 1 bath, 450 sq ft","name":"Heather House #1403","street":"1650 Burnaby Street","area":"West End","rent":2155,"av":"2026-12-01","pets":false,"img":"/assets/photos/hh-1403/01-800.webp?v=f6d2ef67"},"hh-906":{"t":"1 bed, 1 bath, 500 sq ft","name":"Heather House #906","street":"1650 Burnaby Street","area":"West End","rent":2190,"av":"2026-12-01","pets":false,"img":"/assets/photos/hh-906/01-800.webp?v=fbdf94c0"},"km-101":{"t":"2 bed, 1 bath, 815 sq ft","name":"Kevin Manor #101","street":"1661 Burnaby Street","area":"West End","rent":3795,"av":"now","pets":false,"img":"/assets/photos/km-101/01-800.webp?v=4cf0cb22"},"km-407":{"t":"1 bed, 1 bath, 450 sq ft","name":"Kevin Manor #407","street":"1661 Burnaby Street","area":"West End","rent":2040,"av":"2026-12-01","pets":false,"img":"/assets/photos/km-407/01-800.webp?v=2dafcfa7"},"rw-308":{"t":"1 bed + den, 1 bath, 750 sq ft","name":"Rosewoods #308","street":"1730 Pendrell Street","area":"West End","rent":2690,"av":"now","pets":false,"img":"/assets/photos/rw-308/01-800.webp?v=5fe16beb"},"rw-204":{"t":"2 bed, 1.5 bath, 950 sq ft","name":"Rosewoods #204","street":"1730 Pendrell Street","area":"West End","rent":3150,"av":"2027-01-01","pets":false,"img":"/assets/photos/rw-204/01-800.webp?v=d0195849"},"bt-703":{"t":"1 bed, 1 bath, 475 sq ft","name":"Bayside Towers #703","street":"1846 Nelson Street","area":"West End","rent":2095,"av":"2026-12-01","pets":false,"img":"/assets/photos/bt-703/01-800.webp?v=6884a56d"},"watson-302":{"t":"2 bed + flex, 1 bath, 705 sq ft","name":"The Independent at Main #302","street":"2508 Watson Street","area":"Mount Pleasant","rent":3150,"av":"now","pets":true,"img":"/assets/photos/watson-302/01-800.webp?v=daa5d00b"},"w71-2":{"t":"Studio, 1 bath, 500 sq ft","name":"911 West 71st Avenue #2","street":"911 West 71st Avenue","area":"Marpole","rent":1580,"av":"2026-12-01","pets":true,"img":"/assets/photos/w71-2/01-800.webp?v=1e2404e6"},"cambie-201":{"t":"1 bed, 1 bath, 750 sq ft","name":"Hillcrest Manor #201","street":"3850 Cambie Street","area":"Cambie Village","rent":2150,"av":"2026-12-01","pets":true,"img":"/assets/photos/cambie-201/01-800.webp?v=882d79a9"}}</script>
-<script src="/assets/js/common.js?v=0c7f4b2c" defer></script>
-<script src="/assets/js/apply.js?v=def535fb" defer></script>
+<script type="application/json" id="apply-data">{"bm-1502":{"t":"2 bed, 2 bath, 1,200 sq ft","name":"Braeview Manor #1502","street":"1260 Bidwell Street","area":"West End","rent":4500,"av":"now","pets":false,"img":"/assets/photos/bm-1502/01-800.webp?v=9a314981","rb":{"ll":"fg","code":"BM 1502","suite":"1502","addr":"1260 Bidwell Street, Vancouver BC V6G 2L2"}},"et-1200":{"t":"2 bed, 2 bath, 1,200 sq ft","name":"Elliot Towers #1200","street":"1350 Broughton Street","area":"West End","rent":4500,"av":"2026-12-01","pets":false,"img":"/assets/photos/et-1200/01-800.webp?v=8ff29af2","rb":{"ll":"fg","code":"ET 1200","suite":"1200","addr":"1350 Broughton Street, Vancouver BC V6G 2X3"}},"et-503":{"t":"1 bed, 1 bath, 630 sq ft","name":"Elliot Towers #503","street":"1350 Broughton Street","area":"West End","rent":2595,"av":"now","pets":false,"img":"/assets/photos/et-503/01-800.webp?v=abb0e978","rb":{"ll":"fg","code":"ET 503","suite":"503","addr":"1350 Broughton Street, Vancouver BC V6G 2X3"}},"et-1003":{"t":"1 bed, 1 bath, 650 sq ft","name":"Elliot Towers #1003","street":"1350 Broughton Street","area":"West End","rent":2500,"av":"now","pets":false,"img":"/assets/photos/et-1003/01-800.webp?v=fb5bdc5b","rb":{"ll":"fg","code":"ET 1003","suite":"1003","addr":"1350 Broughton Street, Vancouver BC V6G 2X3"}},"et-202":{"t":"1 bed, 1 bath, 625 sq ft","name":"Elliot Towers #202","street":"1350 Broughton Street","area":"West End","rent":2160,"av":"now","pets":false,"img":"/assets/photos/et-202/01-800.webp?v=b8a43a99","rb":{"ll":"fg","code":"ET 202","suite":"202","addr":"1350 Broughton Street, Vancouver BC V6G 2X3"}},"et-901":{"t":"1 bed, 1 bath, 625 sq ft","name":"Elliot Towers #901","street":"1350 Broughton Street","area":"West End","rent":2300,"av":"2026-12-01","pets":false,"img":"/assets/photos/et-901/01-800.webp?v=7b3bcfa2","rb":{"ll":"fg","code":"ET 901","suite":"901","addr":"1350 Broughton Street, Vancouver BC V6G 2X3"}},"bm-801":{"t":"1 bed, 1 bath, 450 sq ft","name":"Braeview Manor #801","street":"1260 Bidwell Street","area":"West End","rent":2290,"av":"now","pets":false,"img":"/assets/photos/bm-801/01-800.webp?v=08a6aa10","rb":{"ll":"fg","code":"BM 801","suite":"801","addr":"1260 Bidwell Street, Vancouver BC V6G 2L2"}},"bm-502":{"t":"2 bed, 2 bath, 925 sq ft","name":"Braeview Manor #502","street":"1260 Bidwell Street","area":"West End","rent":3545,"av":"2027-02-01","pets":false,"img":"/assets/photos/bm-502/01-800.webp?v=fa2d57d3","rb":{"ll":"fg","code":"BM 502","suite":"502","addr":"1260 Bidwell Street, Vancouver BC V6G 2L2"}},"bm-704":{"t":"1 bed, 1 bath, 650 sq ft","name":"Braeview Manor #704","street":"1260 Bidwell Street","area":"West End","rent":2450,"av":"2026-12-01","pets":false,"img":"/assets/photos/bm-704/01-800.webp?v=16157a7d","rb":{"ll":"fg","code":"BM 704","suite":"704","addr":"1260 Bidwell Street, Vancouver BC V6G 2L2"}},"hh-708":{"t":"1 bed, 1 bath, 450 sq ft","name":"Heather House #708","street":"1650 Burnaby Street","area":"West End","rent":2245,"av":"now","pets":false,"img":"/assets/photos/hh-708/01-800.webp?v=d9ba1609","rb":{"ll":"fg","code":"HH 708","suite":"708","addr":"1650 Burnaby Street, Vancouver BC V6G 1X3"}},"hh-903":{"t":"1 bed, 1 bath, 500 sq ft","name":"Heather House #903","street":"1650 Burnaby Street","area":"West End","rent":2205,"av":"now","pets":false,"img":"/assets/photos/hh-903/01-800.webp?v=c2ecb0d7","rb":{"ll":"fg","code":"HH 903","suite":"903","addr":"1650 Burnaby Street, Vancouver BC V6G 1X3"}},"hh-1403":{"t":"1 bed, 1 bath, 450 sq ft","name":"Heather House #1403","street":"1650 Burnaby Street","area":"West End","rent":2155,"av":"2026-12-01","pets":false,"img":"/assets/photos/hh-1403/01-800.webp?v=f6d2ef67","rb":{"ll":"fg","code":"HH 1403","suite":"1403","addr":"1650 Burnaby Street, Vancouver BC V6G 1X3"}},"hh-906":{"t":"1 bed, 1 bath, 500 sq ft","name":"Heather House #906","street":"1650 Burnaby Street","area":"West End","rent":2190,"av":"2026-12-01","pets":false,"img":"/assets/photos/hh-906/01-800.webp?v=fbdf94c0","rb":{"ll":"fg","code":"HH 906","suite":"906","addr":"1650 Burnaby Street, Vancouver BC V6G 1X3"}},"km-101":{"t":"2 bed, 1 bath, 815 sq ft","name":"Kevin Manor #101","street":"1661 Burnaby Street","area":"West End","rent":3795,"av":"now","pets":false,"img":"/assets/photos/km-101/01-800.webp?v=4cf0cb22","rb":{"ll":"fg","code":"KM 101","suite":"101","addr":"1661 Burnaby Street, Vancouver BC V6G 1X4"}},"km-407":{"t":"1 bed, 1 bath, 450 sq ft","name":"Kevin Manor #407","street":"1661 Burnaby Street","area":"West End","rent":2040,"av":"2026-12-01","pets":false,"img":"/assets/photos/km-407/01-800.webp?v=2dafcfa7","rb":{"ll":"fg","code":"KM 407","suite":"407","addr":"1661 Burnaby Street, Vancouver BC V6G 1X4"}},"rw-308":{"t":"1 bed + den, 1 bath, 750 sq ft","name":"Rosewoods #308","street":"1730 Pendrell Street","area":"West End","rent":2690,"av":"now","pets":false,"img":"/assets/photos/rw-308/01-800.webp?v=5fe16beb","rb":{"ll":"fg","code":"RW 308","suite":"308","addr":"1730 Pendrell Street, Vancouver BC V6G 3A3"}},"rw-204":{"t":"2 bed, 1.5 bath, 950 sq ft","name":"Rosewoods #204","street":"1730 Pendrell Street","area":"West End","rent":3150,"av":"2027-01-01","pets":false,"img":"/assets/photos/rw-204/01-800.webp?v=d0195849","rb":{"ll":"fg","code":"RW 204","suite":"204","addr":"1730 Pendrell Street, Vancouver BC V6G 3A3"}},"bt-703":{"t":"1 bed, 1 bath, 475 sq ft","name":"Bayside Towers #703","street":"1846 Nelson Street","area":"West End","rent":2095,"av":"2026-12-01","pets":false,"img":"/assets/photos/bt-703/01-800.webp?v=6884a56d","rb":{"ll":"fg","code":"BT 703","suite":"703","addr":"1846 Nelson Street, Vancouver BC V6G 1N1"}},"watson-302":{"t":"2 bed + flex, 1 bath, 705 sq ft","name":"The Independent at Main #302","street":"2508 Watson Street","area":"Mount Pleasant","rent":3150,"av":"now","pets":true,"img":"/assets/photos/watson-302/01-800.webp?v=daa5d00b"},"w71-2":{"t":"Studio, 1 bath, 500 sq ft","name":"911 West 71st Avenue #2","street":"911 West 71st Avenue","area":"Marpole","rent":1580,"av":"2026-12-01","pets":true,"img":"/assets/photos/w71-2/01-800.webp?v=1e2404e6"},"cambie-201":{"t":"1 bed, 1 bath, 750 sq ft","name":"Hillcrest Manor #201","street":"3850 Cambie Street","area":"Cambie Village","rent":2150,"av":"2026-12-01","pets":true,"img":"/assets/photos/cambie-201/01-800.webp?v=882d79a9"}}</script>
+<script type="application/json" id="rentbc-data">{"fg":{"name":"Forth Gen Holdings Ltd.","address":"#100-1661 Burnaby Street, Vancouver, BC V6G 1X4","phone":"778-899-6894","utilities":["Heat","Water Supply","Hot Water","Waste Collection","Sewage Disposal"],"parking":120,"deposit":0.5,"terms":"No BBQ, No Pets, No Smoking. No assignment, No Subletting. Tenant is responsible for BC Hydro and Tenant home Insurance. Parking is under separate agreement. Only the named tenants to reside in the rental unit."}}</script>
+<script src="/assets/js/common.js?v=b2a7424d" defer></script>
+<script src="/assets/js/apply.js?v=646933de" defer></script>
 </body>
 </html>

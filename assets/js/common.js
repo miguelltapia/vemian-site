@@ -69,8 +69,10 @@
   // ---------- sending ----------
   // Posts JSON as text/plain (no CORS preflight, which Google Apps Script can't answer).
   // Without an endpoint, opens the visitor's email app with the message filled in.
+  // The script's answer stays in send.reply (an application's co-applicant code, for one).
   async function send(payload) {
     const body = { ...payload, page: location.href, sentAt: new Date().toISOString() };
+    send.reply = null;
     if (!C.endpoint) { mailto(body); return 'mail'; }
     const ctrl = new AbortController();
     const timer = setTimeout(() => ctrl.abort(), 120000);
@@ -79,6 +81,7 @@
       let data = {};
       try { data = await res.json(); } catch { /* non-JSON answer */ }
       if (!res.ok || data.ok === false) throw new Error(data.error || `HTTP ${res.status}`);
+      send.reply = data;
       return 'sent';
     } finally { clearTimeout(timer); }
   }
