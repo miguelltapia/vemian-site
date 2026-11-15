@@ -2,8 +2,9 @@
 // managers' emails and the exact addresses are in the "Vemian showings" Google script (form-backend/Showings.gs),
 // which checks the password on every request, books, moves and cancels the calendar events (Outlook is invited)
 // and sends the emails, including the thank-you email to the prospect 30 minutes after each showing starts (not
-// for a cancelled one). Every showing is 15 minutes, in Vancouver time: UTC−7 all year since BC's permanent
-// daylight time (2026).
+// for a cancelled one). Cancel opens a pop-up: "Cancel showing" tells the prospect, the manager and Outlook;
+// "No show" only takes the showing off the calendar (Outlook gets the cancellation, nobody else is emailed).
+// Every showing is 15 minutes, in Vancouver time: UTC−7 all year since BC's permanent daylight time (2026).
 (() => {
   const $ = (s, r = document) => r.querySelector(s);
   const $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -14,6 +15,7 @@
   let PW = '';
   let MANAGERS = {};
   let THANKS = null;                    // is the script's thank-you trigger on? (false until setup has run)
+  let NOSHOW = false;                   // does the script know "No show"? (since 14 Nov 2026; an older one doesn't)
 
   // ---------- Vancouver time ----------
   const vanToday = () => new Date(Date.now() + OFFSET * 3600000).toISOString().slice(0, 10);
@@ -61,6 +63,7 @@
       const r = await call('ping');
       MANAGERS = r.managers || {};
       THANKS = r.thanks;
+      NOSHOW = r.noShow === true;
       try { sessionStorage.setItem(SAVED, password); } catch { /* storage blocked */ }
       lock.hidden = true;
       app.hidden = false;
@@ -112,7 +115,17 @@
           <p class="form-msg" id="sc-list-msg" role="status"></p>
           <div id="sc-items"><p class="rp-empty">Loading…</p></div>
         </section>
-      </div>`;
+      </div>
+      <dialog class="sheet sc-dlg" id="sc-dlg" aria-labelledby="sc-dlg-h">
+        <form method="dialog">
+          <div class="sheet-head"><h2 id="sc-dlg-h">Cancel this showing?</h2><p id="sc-dlg-what"></p></div>
+          <div class="sheet-body sc-opts">
+            <button type="submit" class="sc-opt sc-opt-cancel" value="cancel"><b>Cancel showing</b><span id="sc-dlg-c"></span></button>
+            <button type="submit" class="sc-opt" value="noshow" id="sc-dlg-ns"><b>No show</b><span></span></button>
+            <button type="submit" class="btn btn-ghost btn-block" value="keep" autofocus>Keep it</button>
+          </div>
+        </form>
+      </dialog>`;
     $('[data-lock]', app).addEventListener('click', () => { try { sessionStorage.removeItem(SAVED); } catch { /* storage blocked */ } location.reload(); });
 
     const b = $('#sc-b'), u = $('#sc-u'), other = $('#sc-other');
@@ -171,7 +184,47 @@
     });
     $('#sc-refresh').addEventListener('click', list);
     $('#sc-items').addEventListener('click', onItem);
+    wireDialog();
     list();
+  }
+
+  // ---------- the cancel pop-up: "Cancel showing" (everyone is told) or "No show" (only Outlook is told) ----------
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)');
+  let answer = null;                    // resolves ask() when the pop-up closes
+  function ask(s) {
+    const dlg = $('#sc-dlg');
+    const thank = s.thankAt && s.thank !== false && !s.thanked;   // a thank-you email is still to go
+    $('#sc-dlg-what').innerHTML = `<b>${esc(s.title)}</b><br>${esc(s.when)}${s.prospect ? `<br>${esc(s.prospect)}` : ''}`;
+    $('#sc-dlg-c').textContent = `Emails the prospect and the building manager, and ${D.outlook} gets the cancellation.${thank ? ' No thank-you email.' : ''}`;
+    const ns = $('#sc-dlg-ns');
+    ns.disabled = !NOSHOW;
+    $('span', ns).textContent = !NOSHOW ? 'Not on yet: paste the new Showings.gs into the Google script and deploy a new version.'
+      : `Only takes it off your calendar. ${D.outlook} gets the cancellation; no email to the prospect or the building manager.${thank ? ' No thank-you email either.' : s.thanked ? ' (The thank-you email already went out.)' : ''}`;
+    dlg.returnValue = '';
+    dlg.showModal();
+    document.documentElement.classList.add('no-scroll');
+    return new Promise((resolve) => { answer = resolve; });
+  }
+  // closes with the site's fade (the pop-up's own form would close it at once) and gives ask() the answer
+  function shut(dlg, value) {
+    if (!dlg.open || dlg.classList.contains('closing')) return;
+    const done = () => { dlg.classList.remove('closing'); dlg.close(value); answered(value); };
+    if (reduce.matches) { done(); return; }
+    dlg.classList.add('closing');
+    setTimeout(done, 190);
+  }
+  function answered(value) {
+    document.documentElement.classList.remove('no-scroll');
+    if (answer) { const give = answer; answer = null; give(value); }
+  }
+  function wireDialog() {
+    const dlg = $('#sc-dlg');
+    $('form', dlg).addEventListener('submit', (e) => { e.preventDefault(); shut(dlg, e.submitter?.value || 'keep'); });
+    dlg.addEventListener('cancel', (e) => { e.preventDefault(); shut(dlg, 'keep'); });       // Esc
+    dlg.addEventListener('click', (e) => { if (e.target === dlg) shut(dlg, 'keep'); });    // a tap on the dimmed page
+    // shut some other way (a browser may force it closed on a second Esc): the same as "Keep it". Chrome sends this
+    // event with the next frame, so it can come late: ignore it if the pop-up is open again by then.
+    dlg.addEventListener('close', () => { if (!dlg.open) answered(dlg.returnValue); });
   }
 
   // ---------- upcoming: reschedule or cancel ----------
@@ -181,8 +234,11 @@
     try {
       const r = await call('list');
       ITEMS = r.showings || [];
-      box.innerHTML = ITEMS.length ? `<ul class="sc-items">${ITEMS.map((s, i) => `<li data-i="${i}">
-          <b>${esc(s.when)}</b><span>${esc(s.title)}</span>${s.prospect ? `<small>${esc(s.prospect)}</small>` : ''}${thankText(s) ? `<small>${esc(thankText(s))}</small>` : ''}
+      const now = Date.now();
+      // today's earlier showings stay listed (the script keeps them until midnight), so a no-show can be marked later
+      const started = (s) => s.start && s.start <= now;
+      box.innerHTML = ITEMS.length ? `<ul class="sc-items">${ITEMS.map((s, i) => `<li data-i="${i}"${started(s) ? ' class="sc-past"' : ''}>
+          <b>${esc(s.when)}${started(s) ? ' <em class="sc-tag">Started</em>' : ''}</b><span>${esc(s.title)}</span>${s.prospect ? `<small>${esc(s.prospect)}</small>` : ''}${thankText(s) ? `<small>${esc(thankText(s))}</small>` : ''}
           <div class="sc-acts"><button type="button" class="btn btn-ghost btn-sm" data-act="move">Reschedule</button><button type="button" class="btn btn-ghost btn-sm sc-cancel" data-act="cancel">Cancel</button></div>
           <div class="sc-move" hidden>
             <div class="row-2"><div class="field"><label>New day</label><input class="input" type="date" min="${vanToday()}" value="${esc(s.date || vanToday())}"></div>
@@ -206,11 +262,15 @@
     const busy = (on, label) => { $$('button', li).forEach((x) => { x.disabled = on; }); if (on) btn.innerHTML = `<span class="spinner"></span> ${label}`; };
     try {
       if (btn.dataset.act === 'cancel') {
-        if (!confirm(`Cancel the showing at ${s.title}, ${s.when}?\n\nThe prospect, the building manager and ${D.outlook} will be told${s.thankAt && !s.thanked ? ', and no thank-you email will go out' : ''}.`)) return;
-        busy(true, 'Cancelling…');
-        const r = await call('cancel', { id: s.id });
+        const choice = await ask(s);
+        if (choice !== 'cancel' && choice !== 'noshow') return;           // "Keep it", Esc or a tap outside
+        const noshow = choice === 'noshow';
+        busy(true, noshow ? 'Removing…' : 'Cancelling…');
+        const r = await call(choice, { id: s.id });
         out.className = 'form-msg sc-done';
-        out.innerHTML = `<b>Cancelled: ${esc(r.place)}, ${esc(r.when)}.</b><br>${sentText(r.sent)}`;
+        out.innerHTML = noshow
+          ? `<b>No show: ${esc(r.place)}, ${esc(r.when)}. It’s off your calendar.</b><br>${[sentText(r.sent), 'no email to the prospect or the building manager', r.thanked && 'the thank-you email had already gone out'].filter(Boolean).join(' · ')}`
+          : `<b>Cancelled: ${esc(r.place)}, ${esc(r.when)}.</b><br>${sentText(r.sent)}`;
       } else if (btn.dataset.act === 'save') {
         const date = $('input[type=date]', move).value, time = $('select', move).value;
         if (!date) return;
