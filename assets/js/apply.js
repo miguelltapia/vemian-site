@@ -11,7 +11,7 @@
   if (!form) return;
   const steps = $$('.step', form);
   const params = new URLSearchParams(location.search);
-  // A co-applicant's link: /apply?join=CODE&home=ID&with=FIRST NAME&d=MOVE-IN DATE&p=1 (parking stall).
+  // A co-applicant's link: /apply?join=CODE&home=ID&with=FIRST NAME&d=MOVE-IN DATE (older links also carry p=1: ignored).
   // Only the code counts on the server; the rest is for showing what they're signing.
   const JOIN = /^[A-Z2-9]{12}$/.test(params.get('join') || '') ? params.get('join') : '';
   const JOIN_HOME = JOIN ? params.get('home') || '' : '';
@@ -449,13 +449,12 @@
     const L = h?.rb && RB[h.rb.ll];
     if (!el) return;
     if (!L) { el.innerHTML = JOIN ? `<p>Your answers and signature go on Forth Gen’s Application for Tenancy, the RentBC form landlords use in BC, together with ${esc(JOIN_WITH || 'the first applicant')}’s.</p>` : ''; return; }
-    const park = JOIN ? params.get('p') === '1' : answers().parking === true;
     const start = JOIN ? params.get('d') || '' : val('startDate');
     const utilities = L.utilities.map((u, i) => (i ? u.toLowerCase() : u));
     const list = utilities.length > 1 ? `${utilities.slice(0, -1).join(', ')} and ${utilities[utilities.length - 1]}` : utilities.join('');
     el.innerHTML = `<p>Your answers and signature go on <b>Forth Gen’s Application for Tenancy</b>, the RentBC form landlords use in BC${JOIN ? `, on the same form as ${esc(JOIN_WITH || 'the first applicant')}` : ''}. ${esc(C.person)} passes it on to Forth Gen. By signing, you:</p>
       <ul>
-        <li><b>Offer to rent ${esc(h.name)}</b> at ${money(h.rent)} a month${park ? ` plus ${money(L.parking)} for a parking stall` : ''}${/^\d{4}-\d{2}-\d{2}$/.test(start) ? `, from ${esc(fmtDate(start))}` : ''}. ${esc(list)} are included.</li>
+        <li><b>Offer to rent ${esc(h.name)}</b> at ${money(h.rent)} a month${/^\d{4}-\d{2}-\d{2}$/.test(start) ? `, from ${esc(fmtDate(start))}` : ''}. ${esc(list)} are included.</li>
         <li><b>Agree that if Forth Gen accepts, the offer is binding:</b> you’ll sign their tenancy agreement and pay a security deposit of ${money(Math.round(h.rent * L.deposit))}${L.deposit === 0.5 ? ' (half a month’s rent)' : ''}. If you then don’t sign it or move in, you may have to pay the rent they lose and related costs.</li>
         <li><b>Agree to these terms:</b> “${esc(L.terms)}”</li>
         <li><b>Let Forth Gen check</b> your credit, rental history and employment with the references you gave, and confirm that your answers are true and correct.</li>
@@ -574,7 +573,6 @@
   function showCoLink(code, co) {
     const coName = firstWord(val('renter2')) || 'your co-applicant';
     const q = new URLSearchParams({ join: code, home: val('home'), with: val('firstName'), d: val('startDate') });
-    if (answers().parking === true) q.set('p', '1');
     const link = `${location.origin}/apply?${q}`;
     const box = $('#done-co');
     const start = $('#co-start');
