@@ -80,7 +80,9 @@
       const res = await fetch(C.endpoint, { method: 'POST', body: JSON.stringify(body), signal: ctrl.signal });
       let data = {};
       try { data = await res.json(); } catch { /* non-JSON answer */ }
-      if (!res.ok || data.ok === false) throw new Error(data.error || `HTTP ${res.status}`);
+      // Only the script's own "ok: true" counts as sent. Google answers some failures with an HTML page and status
+      // 200 (a broken deployment, a missing permission): that must show the error, not "Thank you".
+      if (!res.ok || data.ok !== true) throw new Error(data.error || `HTTP ${res.status}${data.ok === undefined ? ', not the forms script' : ''}`);
       send.reply = data;
       return 'sent';
     } finally { clearTimeout(timer); }
@@ -256,5 +258,26 @@
     } catch { /* user cancelled */ }
   }
 
-  window.V = { $, $$, esc, track, avail, money, todayISO, openDlg, closeDlg, send, toast, share, talk: talkApi, config: C };
+  // ---------- copy a reference or a key ----------
+  async function copyText(text, what = 'Copied') {
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch {
+      // older browsers, or no clipboard permission: copy through a hidden text box
+      const t = document.createElement('textarea');
+      t.value = text;
+      t.setAttribute('readonly', '');
+      t.style.cssText = 'position:fixed;top:0;left:0;opacity:0';
+      document.body.append(t);
+      t.select();
+      let ok = false;
+      try { ok = document.execCommand('copy'); } catch { /* not allowed */ }
+      t.remove();
+      if (!ok) { toast('Couldn’t copy. Select it and copy it by hand.'); return false; }
+    }
+    toast(what);
+    return true;
+  }
+
+  window.V = { $, $$, esc, track, avail, money, todayISO, openDlg, closeDlg, send, toast, share, copyText, talk: talkApi, config: C };
 })();

@@ -782,6 +782,9 @@ fieldset.field > legend { margin-bottom: 8px; }
 .app-done h2 { font-size: var(--step-3); }
 .app-done p { color: var(--ink-70); margin: 10px auto 0; max-width: 52ch; }
 .app-done .btns { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 22px; }
+.app-done .done-ref { margin-top: 16px; font-size: 0.95rem; }
+.done-ref b { color: var(--green-900); font-variant-numeric: tabular-nums; letter-spacing: 0.02em; }
+.doc-safe { align-items: flex-start; font-weight: 500; }
 .sign-box { border: 1px solid var(--line); border-radius: 14px; padding: 16px; display: grid; gap: 14px; }
 .sign-box h3 { font-family: var(--sans); font-size: 0.95rem; font-weight: 600; }
 .rb-summary { font-size: 0.88rem; color: var(--ink-70); line-height: 1.55; padding: 12px 14px; background: var(--ivory); border-radius: 10px; display: grid; gap: 8px; }

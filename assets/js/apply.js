@@ -4,7 +4,7 @@
 // pad, and an optional co-applicant who adds their part after the first applicant, on the same device or on their
 // own phone, through a link (/apply?join=CODE). The forms script fills in the form (form-backend/RentBC.gs).
 (() => {
-  const { $, $$, esc, track, avail, money, send, toast, share, config: C } = window.V;
+  const { $, $$, esc, track, avail, money, send, toast, share, copyText, config: C } = window.V;
   const HOMES = JSON.parse($('#apply-data').textContent);
   const RB = JSON.parse($('#rentbc-data')?.textContent || '{}');
   const form = $('#app-form');
@@ -554,6 +554,10 @@
           : `Your application for ${homeLabel} is with ${C.person}${rb ? ', on Forth Gen’s form with your signature' : ''}. He’ll review it and contact you about next steps by phone or email.`;
       $('#done-back').hidden = how === 'sent';
       $('#done-home').hidden = how !== 'sent';
+      // the forms script's reference (its date and time, as in Michael's email and the Drive folder)
+      const ref = how === 'sent' && /^[\w-]{6,40}$/.test(String(reply.ref || '')) ? String(reply.ref) : '';
+      $('#done-ref').hidden = !ref;
+      $('#done-ref-num').textContent = ref;
       $('#done-adults').hidden = JOIN || Number(val('adults') || 1) < (withCo() ? 3 : 2);
       if (how === 'sent' && reply.join && withCo()) showCoLink(reply.join, co);
       scrollTo({ top: 0, behavior: 'smooth' });
@@ -605,6 +609,7 @@
 
   // copy the application link for the other adults
   $$('[data-share-link]').forEach((b) => b.addEventListener('click', () => share(b.dataset.shareLink || `${C.site}/apply`, 'Rental application | Vemian')));
+  $('#done-ref-copy')?.addEventListener('click', () => copyText($('#done-ref-num').textContent, 'Reference copied'));
   $$('[data-restart]').forEach((b) => b.addEventListener('click', () => {
     try { sessionStorage.removeItem(DRAFT); } catch { /* ignore */ }
     location.href = JOIN ? location.pathname + location.search : location.pathname + (val('home') && val('home') !== 'other' ? `?home=${encodeURIComponent(val('home'))}` : '');
