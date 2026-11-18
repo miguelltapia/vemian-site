@@ -18,4 +18,4 @@ Photos: `assets/photos/<home>` are the homes on the site now. `assets/photos/ina
 
 Run the build, then in GitHub Desktop: write a short summary (for example "Rent update"), click **Commit to main**, then **Push origin**. Vercel publishes it in about a minute.
 
-The GitHub website can only take 100 files per upload and this folder has 985, so use GitHub Desktop rather than the browser.
+The GitHub website can only take 100 files per upload and this folder has 987, so use GitHub Desktop rather than the browser.
