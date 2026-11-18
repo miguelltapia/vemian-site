@@ -22,6 +22,7 @@
   let WI = 0;                           // the week on screen in Weekly reports (index in R.weeks)
   let shown = null;                     // the week the filters belong to (they reset when the week changes)
   let snapOpen = false;                 // the week's "Buildings and units" panel
+  let SUB = 'activity';                 // inside a week: 'activity', or 'pricing' when the week has advice
   const F = { b: 'all', s: 'all' };     // filters: building code, source
   const b64 = (s) => Uint8Array.from(atob(s), (c) => c.charCodeAt(0));
 
@@ -182,12 +183,12 @@
     tooltips();
   }
 
-  // #dashboard (or no address), #weeks (the latest week) or #week-<monday>
+  // #dashboard (or no address), #weeks (the latest week), #week-<monday> or #week-<monday>-pricing
   function route() {
-    const m = location.hash.match(/^#week-(\d{4}-\d{2}-\d{2})$/);
+    const m = location.hash.match(/^#week-(\d{4}-\d{2}-\d{2})(-pricing)?$/);
     const i = m ? R.weeks.findIndex((w) => w.week === m[1]) : -1;
     const view = i >= 0 || location.hash === '#weeks' ? 'weeks' : 'dashboard';
-    if (i >= 0) WI = i;
+    if (i >= 0) { WI = i; SUB = m[2] ? 'pricing' : 'activity'; }
     $$('[data-view]', app).forEach((t) => {
       const on = t.dataset.view === view;
       t.setAttribute('aria-selected', String(on));
@@ -196,8 +197,8 @@
     $('#rp-view').setAttribute('aria-labelledby', `tab-${view}`);
     if (view === 'dashboard') dashboard(); else weekView();
   }
-  function go(view, i = WI) {
-    const hash = view === 'dashboard' ? '#dashboard' : `#week-${R.weeks[i].week}`;
+  function go(view, i = WI, sub = 'activity') {
+    const hash = view === 'dashboard' ? '#dashboard' : `#week-${R.weeks[i].week}${sub === 'pricing' && R.weeks[i].advice ? '-pricing' : ''}`;
     if (location.hash !== hash) location.hash = hash;   // → hashchange → route()
     else route();
     window.scrollTo({ top: 0 });
@@ -232,6 +233,7 @@
     const most = Math.max(1, ...weeks.map((x) => x.s.inquiries));
     const codes = [...new Set(units.map((u) => u.code))];
     const prev = before ? new Map(before.inventory.map((u) => [unitKey(u), u])) : null;
+    const advised = [...R.weeks].reverse().find((w) => w.advice);
 
     $('#rp-view').innerHTML = `
       <div class="rp-head">
@@ -245,6 +247,7 @@
         <div class="kpi"><span>Inquiries</span><b>${leads.length}</b><small>since ${esc(sinceTxt)} · ${now.inquiries} in ${esc(range(W))}</small></div>
         <div class="kpi"><span>Showings held</span><b>${shows.length}</b><small>since ${esc(sinceTxt)} · ${now.held} in ${esc(range(W))}</small></div>
       </section>
+      ${advised ? adviceBanner(advised) : ''}
 
       <section class="rp-grid">
         <article class="rp-card rp-wide">
@@ -276,10 +279,19 @@
     wireUnits($('#rp-now-units'));
   }
 
+  // the week's advice in one line, linking to its Pricing & incentives view
+  const adviceBanner = (w) => `
+    <a class="rp-banner" href="#week-${esc(w.week)}-pricing">
+      <span class="rp-badge">Our advice · ${esc(day(w.advice.date || w.updated, { month: 'short', day: 'numeric' }))}</span>
+      <b>${esc(w.advice.title)}</b>
+      <span class="rp-banner-go">Read the analysis ${chev('M9 6l6 6-6 6')}</span>
+    </a>`;
+
   // ---------- Weekly reports ----------
   function weekView() {
     const W = R.weeks[WI];
     if (shown !== WI) { F.b = 'all'; F.s = 'all'; shown = WI; }
+    const sub = SUB === 'pricing' && W.advice ? 'pricing' : 'activity';
     const codes = [...new Set([...W.leads.map((l) => code(l.u)), ...W.inventory.map((u) => u.code)])].filter(Boolean).sort();
     const sources = [...new Set(W.leads.map((l) => l.s))].sort();
     const last = R.weeks.length - 1;
@@ -293,19 +305,56 @@
         </div>
         <p class="rp-scope">${WI === last ? 'Latest week' : 'Past week'} · figures as of ${esc(day(W.updated, { month: 'short', day: 'numeric' }))}</p>
       </div>
+      ${W.advice ? `<div class="rp-sub" role="tablist" aria-label="This week">
+        <button type="button" role="tab" data-sub="activity" aria-selected="${sub === 'activity'}">Leasing activity</button>
+        <button type="button" role="tab" data-sub="pricing" aria-selected="${sub === 'pricing'}">Pricing &amp; incentives</button>
+      </div>` : ''}
+      ${sub === 'pricing' ? '<div id="rp-advice"></div>' : `
+      ${W.advice ? adviceBanner(W) : ''}
       <div class="rp-filters" role="group" aria-label="Filters">
         <label>Building <select class="select" data-f="b"><option value="all">All buildings</option>${codes.map((c) => `<option value="${esc(c)}">${esc(names()[c] || c)}</option>`).join('')}</select></label>
         <label>Source <select class="select" data-f="s"><option value="all">All sources</option>${sources.map((s) => `<option>${esc(s)}</option>`).join('')}</select></label>
         <p class="rp-scope">The source filter applies to inquiries.</p>
       </div>
-      <div id="rp-body"></div>`;
-    $('#rp-wk').addEventListener('change', (e) => go('weeks', Number(e.target.value)));
-    $$('[data-step]').forEach((b) => b.addEventListener('click', () => go('weeks', WI + Number(b.dataset.step))));
+      <div id="rp-body"></div>`}`;
+    $('#rp-wk').addEventListener('change', (e) => go('weeks', Number(e.target.value), sub));
+    $$('[data-step]').forEach((b) => b.addEventListener('click', () => go('weeks', WI + Number(b.dataset.step), sub)));
+    $$('[data-sub]').forEach((b) => b.addEventListener('click', () => go('weeks', WI, b.dataset.sub)));
+    if (sub === 'pricing') { advice(W); return; }
     $$('[data-f]').forEach((s) => {
       s.value = F[s.dataset.f];
       s.addEventListener('change', () => { F[s.dataset.f] = s.value; weekBody(); });
     });
     weekBody();
+  }
+
+  // ---------- Pricing & incentives: the week's advice (written in the week file as "advice") ----------
+  // blocks: points (bulleted reasons), bars (shares in %), table (cells are text, or [text, smaller line]),
+  // plan (cards by group of suites) and note
+  function advice(W) {
+    const A = W.advice;
+    const cell = (c) => (Array.isArray(c) ? `${esc(c[0])}${c[1] ? `<small>${esc(c[1])}</small>` : ''}` : esc(c));
+    const block = (b) => {
+      const head = `${b.title ? `<h2>${esc(b.title)}</h2>` : ''}${b.intro ? `<p class="rp-intro">${esc(b.intro)}</p>` : ''}`;
+      const note = b.note ? `<p class="rp-note">${esc(b.note)}</p>` : '';
+      if (b.type === 'points') return `<section class="rp-card rp-points">${head}<ul>${b.items.map((x) => `<li>${x.b ? `<b>${esc(x.b)}.</b> ` : ''}${esc(x.t || x)}</li>`).join('')}</ul>${note}</section>`;
+      if (b.type === 'bars') return `<section class="rp-card">${head}<div class="hb">${b.rows.map(([k, v, sub]) => `<div class="hb-row" tabindex="0" data-tip="${esc(`${k}: ${v}%${sub ? ` (${sub})` : ''}`)}"><span class="hb-label">${esc(k)}${sub ? `<small>${esc(sub)}</small>` : ''}</span><span class="hb-track"><i style="width:${Math.max(2, v)}%"></i></span><span class="hb-val">${v}%</span></div>`).join('')}</div>${note}</section>`;
+      if (b.type === 'table') return `<section class="rp-sec">${head}<div class="rp-table-wrap"><table class="rp-table rp-adv">
+          <thead><tr>${b.cols.map((c) => `<th${c.num ? ' class="num"' : ''}>${esc(c.l)}</th>`).join('')}</tr></thead>
+          <tbody>${b.rows.map((r) => { const cells = Array.isArray(r) ? r : r.cells; return `<tr${r.hl ? ' class="hl"' : ''}>${cells.map((c, i) => `<td${b.cols[i]?.num ? ' class="num"' : ''} data-label="${esc(b.cols[i]?.l || '')}"><span class="v">${cell(c)}</span></td>`).join('')}</tr>`; }).join('')}</tbody>
+        </table></div>${note}</section>`;
+      if (b.type === 'plan') return `<section class="rp-sec">${head}<div class="plan">${b.items.map((x) => `<article class="plan-card"><span class="plan-when">${esc(x.when)}</span><h3>${esc(x.h)}</h3>${x.units ? `<p class="plan-units">${esc(x.units)}</p>` : ''}<p>${esc(x.t)}</p></article>`).join('')}</div>${note}</section>`;
+      return `<section class="rp-sec">${head}${note}</section>`;
+    };
+    $('#rp-advice').innerHTML = `
+      <section class="rp-advice">
+        <span class="rp-badge">Our advice · ${esc(day(A.date || W.updated, { month: 'long', day: 'numeric', year: 'numeric' }))}</span>
+        <h1>${esc(A.title).replace(/(\S+-\S+)/g, '<span class="nw">$1</span>')}</h1>
+        <p>${esc(A.lead)}</p>
+        ${A.figures?.length ? `<div class="rp-figs">${A.figures.map((f) => `<div class="rp-fig"><b>${esc(f.v)}</b><span>${esc(f.l)}</span></div>`).join('')}</div>` : ''}
+      </section>
+      ${(A.blocks || []).map(block).join('')}
+      ${FOOT}`;
   }
 
   function weekBody() {

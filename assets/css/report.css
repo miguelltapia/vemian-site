@@ -146,6 +146,48 @@
 .rp-snap-in { display: grid; gap: 16px; padding: 0 20px 20px; }
 .rp-snap-in .rp-chips { margin-bottom: -4px; }
 
+/* a week's two views: Leasing activity and Pricing & incentives */
+.rp-sub { display: inline-flex; gap: 2px; margin-top: 16px; padding: 3px; background: var(--stone-30); border: 1px solid var(--line); border-radius: 999px; max-width: 100%; }
+.rp-sub button { border: 0; background: none; padding: 8px 16px; border-radius: 999px; font-size: 0.9rem; font-weight: 600; color: var(--ink-70); white-space: nowrap; transition: background 0.2s, color 0.2s, box-shadow 0.2s; }
+.rp-sub button:hover { color: var(--green-900); }
+.rp-sub button[aria-selected="true"] { background: var(--white); color: var(--green); box-shadow: 0 1px 3px rgb(22 58 46 / 0.15); }
+
+/* the advice: a one-line banner (dashboard, activity view) and the full analysis */
+.rp-badge { display: inline-block; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--gold-text); }
+.rp-banner { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 14px; margin-top: 16px; padding: 14px 18px; background: var(--gold-15); border: 1px solid color-mix(in srgb, var(--gold) 45%, var(--line)); border-radius: var(--radius-lg); color: var(--charcoal); text-decoration: none; transition: border-color 0.2s, background 0.2s; }
+.rp-banner:hover { border-color: var(--gold); background: color-mix(in srgb, var(--gold) 22%, var(--ivory)); }
+.rp-banner b { font-size: 0.98rem; color: var(--green-900); }
+.rp-banner-go { display: inline-flex; align-items: center; gap: 4px; margin-left: auto; font-size: 0.88rem; font-weight: 600; color: var(--green); }
+.rp-banner-go svg { width: 16px; height: 16px; }
+.rp-advice { margin-top: 18px; padding: clamp(20px, 3vw, 28px); background: var(--green); border-radius: var(--radius-lg); color: var(--ivory); }
+.rp-advice .rp-badge { color: var(--gold-light); }
+.rp-advice h1 { margin-top: 6px; font-size: var(--step-3); line-height: 1.15; color: var(--ivory); max-width: 30ch; text-wrap: balance; }
+.rp-advice h1 .nw { white-space: nowrap; }
+.rp-advice > p { margin-top: 10px; max-width: 72ch; color: var(--on-green-70); line-height: 1.6; }
+.rp-figs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-top: 20px; }
+.rp-fig { display: grid; align-content: start; gap: 4px; padding: 14px 16px; background: rgb(247 244 238 / 0.08); border: 1px solid rgb(247 244 238 / 0.16); border-radius: var(--radius); }
+.rp-fig b { font-size: 1.7rem; font-weight: 600; line-height: 1.1; color: var(--ivory); font-variant-numeric: tabular-nums; }
+.rp-fig span { font-size: 0.8rem; line-height: 1.4; color: var(--on-green-70); }
+.rp-points { margin-top: 12px; }
+.rp-points ul { display: grid; gap: 10px; padding-left: 1.1em; }
+.rp-points li { color: var(--ink-70); line-height: 1.55; }
+.rp-points li::marker { color: var(--gold); }
+.rp-points li b { color: var(--charcoal); }
+.rp-intro { margin: -6px 0 12px; font-size: 0.9rem; color: var(--ink-70); max-width: 75ch; }
+.hb-label small { display: block; font-size: 0.75rem; color: var(--ink-55); }
+.rp-adv td { white-space: normal; min-width: 7ch; line-height: 1.4; }
+.rp-adv td:first-child { min-width: 15ch; font-weight: 500; color: var(--charcoal); }
+.rp-adv td small { display: block; margin-top: 2px; font-size: 0.75rem; color: var(--ink-55); font-weight: 400; }
+.rp-adv td.num { white-space: nowrap; }
+.rp-adv tr.hl td { background: var(--green-08); }
+.rp-adv tr.hl td:first-child { box-shadow: inset 3px 0 0 var(--gold); color: var(--green-900); font-weight: 600; }
+.plan { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+.plan-card { display: grid; align-content: start; gap: 6px; padding: 16px 18px; background: var(--white); border: 1px solid var(--line); border-radius: var(--radius-lg); }
+.plan-when { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--gold-text); }
+.plan-card h3 { font-family: var(--sans); font-size: 1rem; font-weight: 600; color: var(--green-900); }
+.plan-units { font-size: 0.82rem; color: var(--ink-55); }
+.plan-card p:last-child { font-size: 0.9rem; color: var(--ink-70); line-height: 1.55; }
+
 .rp-foot { margin-top: 28px; font-size: 0.82rem; color: var(--ink-55); max-width: 70ch; }
 .rp-tip { position: fixed; z-index: 50; max-width: 280px; padding: 8px 10px; border-radius: 8px; background: var(--charcoal); color: var(--ivory); font-size: 0.82rem; line-height: 1.4; pointer-events: none; box-shadow: var(--shadow); }
 
@@ -153,6 +195,7 @@
   .rp-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .kpi-hero { grid-column: 1 / -1; }
   .rp-grid { grid-template-columns: minmax(0, 1fr); }
+  .rp-figs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 560px) {
   .rp-title span { display: none; }
@@ -164,9 +207,25 @@
   .wk-bar { min-width: 120px; }
   .cols { height: 160px; }
   .rp-snap > summary { flex-wrap: wrap; }
+  .rp-sub { display: flex; }
+  .rp-sub button { flex: 1; padding-inline: 8px; font-size: 0.84rem; }
+  .rp-banner-go { margin-left: 0; }
+  .rp-fig b { font-size: 1.4rem; }
+  /* the analysis tables become one card per row, each value with its column's name */
+  .rp-adv thead { display: none; }
+  .rp-adv, .rp-adv tbody, .rp-adv tr { display: block; width: 100%; }
+  .rp-adv tr { padding: 12px 14px; border-bottom: 1px solid var(--line); }
+  .rp-adv tbody tr:last-child { border-bottom: 0; }
+  .rp-adv td, .rp-adv td.num { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 3px 0; border: 0; min-width: 0; text-align: right; white-space: normal; }
+  .rp-adv td::before { content: attr(data-label); flex: none; max-width: 45%; text-align: left; font-size: 0.76rem; font-weight: 600; color: var(--ink-55); }
+  .rp-adv td:first-child { display: block; padding-bottom: 6px; text-align: left; font-size: 0.95rem; }
+  .rp-adv td:first-child::before { content: none; }
+  .rp-adv tr.hl { background: var(--green-08); box-shadow: inset 3px 0 0 var(--gold); }
+  .rp-adv tr.hl td { background: none; }
+  .rp-adv tr.hl td:first-child { box-shadow: none; }
 }
 @media print {
   .rp-top { position: static; backdrop-filter: none; }
-  [data-lock], .rp-views, .rp-weekpick .rp-step, .rp-filters, .rp-chips, .rp-ub { display: none !important; }
-  .rp-card, .kpi, .fb-card, .rp-snap { break-inside: avoid; }
+  [data-lock], .rp-views, .rp-sub, .rp-weekpick .rp-step, .rp-filters, .rp-chips, .rp-ub { display: none !important; }
+  .rp-card, .kpi, .fb-card, .rp-snap, .plan-card, .rp-fig { break-inside: avoid; }
 }
