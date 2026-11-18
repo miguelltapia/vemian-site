@@ -452,7 +452,7 @@
     const start = JOIN ? params.get('d') || '' : val('startDate');
     const utilities = L.utilities.map((u, i) => (i ? u.toLowerCase() : u));
     const list = utilities.length > 1 ? `${utilities.slice(0, -1).join(', ')} and ${utilities[utilities.length - 1]}` : utilities.join('');
-    el.innerHTML = `<p>Your answers and signature go on <b>Forth Gen’s Application for Tenancy</b>, the RentBC form landlords use in BC${JOIN ? `, on the same form as ${esc(JOIN_WITH || 'the first applicant')}` : ''}. ${esc(C.person)} passes it on to Forth Gen. By signing, you:</p>
+    el.innerHTML = `<p>Your answers and signature go on <b>Forth Gen’s Application for Tenancy</b>, the RentBC form landlords use in BC${JOIN ? `, on the same form as ${esc(JOIN_WITH || 'the first applicant')}` : ''}. ${esc(C.name)} passes it on to Forth Gen. By signing, you:</p>
       <ul>
         <li><b>Offer to rent ${esc(h.name)}</b> at ${money(h.rent)} a month${/^\d{4}-\d{2}-\d{2}$/.test(start) ? `, from ${esc(fmtDate(start))}` : ''}. ${esc(list)} are included.</li>
         <li><b>Agree that if Forth Gen accepts, the offer is binding:</b> you’ll sign their tenancy agreement and pay a security deposit of ${money(Math.round(h.rent * L.deposit))}${L.deposit === 0.5 ? ' (half a month’s rent)' : ''}. If you then don’t sign it or move in, you may have to pay the rent they lose and related costs.</li>

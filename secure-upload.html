@@ -55,7 +55,7 @@
     <ul class="sec-points">
       <li><svg class="icon" aria-hidden="true"><use href="#i-lock"/></svg><div><b>Encrypted on your device</b><span>Each file is locked with AES-256 encryption before it leaves your phone or computer.</span></div></li>
       <li><svg class="icon" aria-hidden="true"><use href="#i-key"/></svg><div><b>Your own private key</b><span>When they’re sent, you get a reference number and a private key. With both, you can open your documents again.</span></div></li>
-      <li><svg class="icon" aria-hidden="true"><use href="#i-shield"/></svg><div><b>Private storage</b><span>Google stores only scrambled files. Michael opens them with Vemian’s own key and shares them only with the landlord of the home you’re applying for.</span></div></li>
+      <li><svg class="icon" aria-hidden="true"><use href="#i-shield"/></svg><div><b>Private storage</b><span>Your files stay encrypted in storage, so not even our storage provider can read them. Only you and Vemian can unlock them, and they’re shared only with the landlord of the home you’re applying for.</span></div></li>
     </ul>
 
     <form class="app-card" id="sec-form" novalidate>
@@ -139,7 +139,7 @@
         <div class="key-row"><span class="key-l">Reference</span><code id="sd-ref"></code><button type="button" class="btn btn-ghost btn-sm" data-copy="sd-ref" data-what="Reference copied"><svg class="icon" aria-hidden="true"><use href="#i-copy"/></svg> Copy</button></div>
         <div class="key-row"><span class="key-l">Your private key</span><code id="sd-key"></code><button type="button" class="btn btn-ghost btn-sm" data-copy="sd-key" data-what="Key copied"><svg class="icon" aria-hidden="true"><use href="#i-copy"/></svg> Copy</button></div>
       </div>
-      <p>Your documents were locked with this key on your device before they were sent (AES-256 encryption). Keep it private: you don’t need to send it to anyone. Michael opens your documents with Vemian’s own key.</p>
+      <p>Your documents were locked with this key on your device before they were sent (AES-256 encryption). Keep it private: you don’t need to send it to anyone. Vemian opens your documents with its own key.</p>
       <p><b>The key is shown only here, once.</b> Copy it or save it as a file: with your reference and this key, you can open your documents again on this page.</p>
       <div class="btns"><button type="button" class="btn btn-primary" id="sd-save"><svg class="icon" aria-hidden="true"><use href="#i-file"/></svg> Save as a file</button><a class="btn btn-ghost" href="/">See all homes</a></div>
     </div>
@@ -214,7 +214,7 @@
     <h3>Who sees it</h3>
     <p>Michael at Vemian, and the landlord of the home you apply for or the landlord’s property manager. A credit reporting agency only if you consent to a credit check. We never sell your information.</p>
     <h3>Where it’s kept, and for how long</h3>
-    <p>Messages and applications arrive by email in Vemian’s private Gmail inbox and are listed in a private Google spreadsheet; uploaded documents are stored in Vemian’s private Google Drive. Documents sent through the secure upload page are encrypted on your device before they’re sent: Google stores only scrambled files, which only you (with your private key) and Vemian (with its own key) can open. We keep an application for one year after a decision is made on it (British Columbia’s Personal Information Protection Act asks for at least a year), then delete it.</p>
+    <p>Everything you send travels over an encrypted connection (HTTPS) and is kept privately by Vemian, never in a public place: messages and applications in Vemian’s private Gmail inbox and a private Google spreadsheet, and uploaded documents in Vemian’s private Google Drive. Documents sent through the secure upload page get extra protection: they’re encrypted on your own device before they’re sent, so only scrambled files are stored, and only you (with your private key) and Vemian (with its own key) can open them. We keep an application for one year after a decision is made on it, as British Columbia’s Personal Information Protection Act requires, then delete it.</p>
     <h3>This website</h3>
     <ul>
       <li>No advertising or analytics cookies.</li>
@@ -263,6 +263,6 @@
 <script type="application/json" id="secure-data">{"office":{"kid":"221f4e23433e","publicKey":"MIIBojANBgkqhkiG9w0BAQEFAAOCAY8AMIIBigKCAYEA5c2HIm9V7dxH/TlwnCx64iZ1uDFVnGAKAJMu+YRjCGd0HapEzVT0wD5uffgg9D2G2Xb1nl056wu1wCiZKDOT++1DC0SSgrLrZhCVxZuccHw/OVBGnPLKCL7EiChYZDRCNVyg562CB6AhuQsl8JHnnM/mLrjY0kVhp9aKllMAythcj0qABy7JPYYmsFyg3Rte1QC39da14pYVIWZMGkYKFHmb5RgzAjz57xC1tM3iqLcCr5TBMhzo5wW0q3IDg0MbLvYGjQWicNaN7H3xUqZMwDLiLma2+SqBV8uGVqPFGd+oedlAoNYzqE4CF3rdeIR0AhShM8a3HVvv9fHEnY7+3i0WWfnwejpCmWK0NJv7KP1IC7beRbFx0aiJRn9fswm4XnD/UvDmK3MhuyE/xZNYfJPDN/QTdLwVjK0WoFP2aCK2olhHwn361b4sGYHpZfhweYu7pIhlij00K6iBC1QMtZCD+HJJeQxWV5fen7E0XE17fZf4xNHOX5uEHIcop5UJAgMBAAE="},"homes":{"et-1200":{"name":"Elliot Towers #1200","street":"1350 Broughton Street"},"et-503":{"name":"Elliot Towers #503","street":"1350 Broughton Street"},"et-1003":{"name":"Elliot Towers #1003","street":"1350 Broughton Street"},"et-901":{"name":"Elliot Towers #901","street":"1350 Broughton Street"},"et-802":{"name":"Elliot Towers #802","street":"1350 Broughton Street"},"bm-801":{"name":"Braeview Manor #801","street":"1260 Bidwell Street"},"bm-502":{"name":"Braeview Manor #502","street":"1260 Bidwell Street"},"hh-708":{"name":"Heather House #708","street":"1650 Burnaby Street"},"hh-903":{"name":"Heather House #903","street":"1650 Burnaby Street"},"hh-1403":{"name":"Heather House #1403","street":"1650 Burnaby Street"},"hh-906":{"name":"Heather House #906","street":"1650 Burnaby Street"},"km-101":{"name":"Kevin Manor #101","street":"1661 Burnaby Street"},"km-407":{"name":"Kevin Manor #407","street":"1661 Burnaby Street"},"rw-308":{"name":"Rosewoods #308","street":"1730 Pendrell Street"},"rw-204":{"name":"Rosewoods #204","street":"1730 Pendrell Street"},"bt-703":{"name":"Bayside Towers #703","street":"1846 Nelson Street"},"watson-302":{"name":"The Independent at Main #302","street":"2508 Watson Street"},"w71-2":{"name":"911 West 71st Avenue #2","street":"911 West 71st Avenue"},"cambie-201":{"name":"Hillcrest Manor #201","street":"3850 Cambie Street"}},"max":{"file":10485760,"total":20971520,"files":15}}</script>
 <script src="/assets/js/common.js?v=a7b334c5" defer></script>
 <script src="/assets/js/secure-crypto.js?v=3e4acd79" defer></script>
-<script src="/assets/js/secure-upload.js?v=182264a4" defer></script>
+<script src="/assets/js/secure-upload.js?v=d6c45de6" defer></script>
 </body>
 </html>

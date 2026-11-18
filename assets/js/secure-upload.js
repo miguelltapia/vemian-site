@@ -228,7 +228,7 @@
       `To open them again: ${C.site}/secure-upload#open`,
       '',
       'Your documents were encrypted on your device with this key before they were sent.',
-      `Keep it private: you don’t need to send it to anyone. ${C.person} opens your documents with ${C.name}’s own key.`,
+      `Keep it private: you don’t need to send it to anyone. ${C.name} opens your documents with its own key.`,
       '',
     ].join('\r\n');
     saveBlob(new Blob([text], { type: 'text/plain;charset=utf-8' }), `${C.name} documents ${receipt.ref}.txt`);
