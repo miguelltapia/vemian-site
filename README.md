@@ -2,7 +2,7 @@
 
 The Vemian website: homes for rent in Vancouver, with an online rental application. Plain HTML, CSS and JavaScript; Vercel serves it with clean URLs (`/apply` serves `apply.html`). There's no build step on Vercel.
 
-This folder is made by `source/build.mjs` in the VEMIAN `Website` folder (last built 2026-11-18). To change the homes, edit `source/listings.mjs` there and run `node source/build.mjs`: this folder is refreshed and GitHub Desktop shows what changed. Don't edit the files here; the next build replaces them. New photos go in `Website/listing-photos`, not here: the build deletes anything it didn't make.
+This folder is made by `source/build.mjs` in the VEMIAN `Website` folder (last built 2026-11-22). To change the homes, edit `source/listings.mjs` there and run `node source/build.mjs`: this folder is refreshed and GitHub Desktop shows what changed. Don't edit the files here; the next build replaces them. New photos go in `Website/listing-photos`, not here: the build deletes anything it didn't make.
 
 Photos: `assets/photos/<home>` are the homes on the site now. `assets/photos/inactive` keeps the photos of homes that aren't on the site (rented or not available) and older photo sets (like #801 furnished), so nothing is lost; when a home comes back, the build moves its photos back.
 
@@ -18,4 +18,4 @@ Photos: `assets/photos/<home>` are the homes on the site now. `assets/photos/ina
 
 Run the build, then in GitHub Desktop: write a short summary (for example "Rent update"), click **Commit to main**, then **Push origin**. Vercel publishes it in about a minute.
 
-The GitHub website can only take 100 files per upload and this folder has 1014, so use GitHub Desktop rather than the browser.
+The GitHub website can only take 100 files per upload and this folder has 1038, so use GitHub Desktop rather than the browser.
