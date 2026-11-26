@@ -122,7 +122,7 @@
             <td class="num">${u.sqft ? u.sqft.toLocaleString('en-CA') : '—'}</td>
             <td class="num">${money(u.rent)}${rentWas}</td>
             <td>${esc(cap(u.avail) || '—')}</td>
-            <td><span class="st st-${stClass(u.status)}" title="${esc(u.status)}">${esc(stShort(u.status))}</span>${stWas}</td>
+            <td><span class="st st-${stClass(u.status)}" title="${esc(u.status)}">${esc(stShort(u.status))}</span>${stWas}${u.note ? `<small class="was">${esc(u.note)}</small>` : ''}</td>
             ${demand ? `<td class="num">${d?.i || '—'}</td><td class="num">${d?.s || '—'}</td>` : ''}
           </tr>`;
         }).join('')}</tbody>
@@ -185,7 +185,7 @@
 
   // #dashboard (or no address), #weeks (the latest week), #week-<monday> or #week-<monday>-pricing
   function route() {
-    const m = location.hash.match(/^#week-(\d{4}-\d{2}-\d{2})(-pricing)?$/);
+    const m = location.hash.match(/^#week-(\d{4}-\d{2}-\d{2})(-pricing|-advice)?$/);
     const i = m ? R.weeks.findIndex((w) => w.week === m[1]) : -1;
     const view = i >= 0 || location.hash === '#weeks' ? 'weeks' : 'dashboard';
     if (i >= 0) { WI = i; SUB = m[2] ? 'pricing' : 'activity'; }
@@ -198,7 +198,7 @@
     if (view === 'dashboard') dashboard(); else weekView();
   }
   function go(view, i = WI, sub = 'activity') {
-    const hash = view === 'dashboard' ? '#dashboard' : `#week-${R.weeks[i].week}${sub === 'pricing' && R.weeks[i].advice ? '-pricing' : ''}`;
+    const hash = view === 'dashboard' ? '#dashboard' : `#week-${R.weeks[i].week}${sub === 'pricing' && R.weeks[i].advice ? '-advice' : ''}`;
     if (location.hash !== hash) location.hash = hash;   // → hashchange → route()
     else route();
     window.scrollTo({ top: 0 });
@@ -212,11 +212,23 @@
     const shows = R.weeks.flatMap((w) => w.showings);
     const apps = R.weeks.flatMap((w) => w.applications || []);
     const leases = R.weeks.flatMap((w) => w.leases || []);
+    const lost = R.weeks.flatMap((w) => w.leasesLost || []);   // a signed lease that fell through later
+    const active = leases.filter((l) => !lost.some((x) => x.u === l.u && x.d >= l.d));
     const since = leads.map((l) => l.d).sort()[0] || R.weeks[0].week;
     const sinceTxt = day(since, { month: 'short', day: 'numeric' });
     const units = W.inventory;
     const inReview = units.filter((u) => /applic/i.test(u.status));
     const appsInReview = apps.filter((a) => inReview.some((u) => unitKey(u) === a.u));
+    // applications marked on hold or in review, for suites that are still open
+    const pending = apps.filter((a) => /hold|review/i.test(a.st || '') && units.some((u) => unitKey(u) === a.u && u.status === 'Open'));
+    // grouped by status: "Elliot Towers #901, Braeview Manor #801 (on hold, Jan 1)"
+    const byStatus = pending.reduce((g, a) => g.set(a.st || '', [...new Set([...(g.get(a.st || '') || []), homeName(a.u)])]), new Map());
+    const reviewing = [...[...byStatus].map(([st, xs]) => `${xs.join(', ')}${st ? ` (${st})` : ''}`), ...inReview.map((u) => homeName(unitKey(u)))];
+    // inquiries per weekday, averaged over the full weeks since marketing began
+    const full = R.weeks.filter((w) => w.week >= since);
+    const perWd = Array.from({ length: 7 }, (_, i) => (full.length ? sum(full, (w) => w.leads.filter((l) => (new Date(`${l.d}T12:00:00Z`).getUTCDay() + 6) % 7 === i).length) / full.length : 0));
+    const wdTop = Math.max(1, ...perWd);
+    const WD = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
     const byManager = units.filter((u) => /manager/i.test(u.status)).length;
     const B = W.buildings || [];
     const vacant = B.length ? sum(B, (b) => b.vacant) : units.filter((u) => u.status === 'Open').length;
@@ -242,8 +254,8 @@
       </div>
       <section class="rp-kpis" aria-label="Where things stand, in numbers">
         <div class="kpi kpi-hero"><span>Vacant units</span><b>${vacant}</b><small>${upcoming ? `${upcoming} more upcoming · ` : ''}${total} in all</small></div>
-        <div class="kpi"><span>Applications in review</span><b>${Math.max(appsInReview.length, inReview.length)}</b><small>${inReview.length ? `for ${esc(inReview.map((u) => homeName(unitKey(u))).join(', '))}` : 'none right now'}</small></div>
-        <div class="kpi"><span>Leases signed</span><b>${leases.length}</b><small>${byManager ? `${plural(byManager, 'unit')} rented by the building managers` : `since ${esc(sinceTxt)}`}</small></div>
+        <div class="kpi"><span>Applications in review</span><b>${pending.length + Math.max(appsInReview.length, inReview.length)}</b><small>${reviewing.length ? esc(reviewing.join(', ')) : 'none right now'}</small></div>
+        <div class="kpi"><span>Leases signed</span><b>${active.length}</b><small>${esc([lost.length ? `${lost.map((x) => homeName(x.u)).join(', ')}: lease fell through` : '', byManager ? `${plural(byManager, 'unit')} rented by the building managers` : ''].filter(Boolean).join(' · ') || `since ${sinceTxt}`)}</small></div>
         <div class="kpi"><span>Inquiries</span><b>${leads.length}</b><small>since ${esc(sinceTxt)} · ${now.inquiries} in ${esc(range(W))}</small></div>
         <div class="kpi"><span>Showings held</span><b>${shows.length}</b><small>since ${esc(sinceTxt)} · ${now.held} in ${esc(range(W))}</small></div>
       </section>
@@ -264,6 +276,10 @@
         </article>
         <article class="rp-card"><h2>Buildings</h2>${B.length ? buildingsTable(B) : '<p class="rp-empty">Not given this week.</p>'}</article>
         <article class="rp-card"><h2>Most asked-about homes since ${esc(sinceTxt)}</h2>${bars(top, 0)}</article>
+        ${full.length >= 2 ? `<article class="rp-card rp-wide"><h2>When inquiries come in</h2>
+          <div class="cols">${perWd.map((n, i) => `<div class="col" tabindex="0" data-tip="${esc(`${WD[i]}s: about ${Math.round(n)} inquiries on average`)}"><span class="col-val">${Math.round(n) || ''}</span><i style="height:${(n / wdTop) * 100}%"></i><span class="col-label">${WD[i].slice(0, 3)}</span></div>`).join('')}</div>
+          <p class="rp-note">Average inquiries per weekday over the ${plural(full.length, 'full week')} since marketing began.</p>
+        </article>` : ''}
       </section>
 
       <section class="rp-sec" id="rp-now-units">
@@ -281,7 +297,7 @@
 
   // the week's advice in one line, linking to its Pricing & incentives view
   const adviceBanner = (w) => `
-    <a class="rp-banner" href="#week-${esc(w.week)}-pricing">
+    <a class="rp-banner" href="#week-${esc(w.week)}-advice">
       <span class="rp-badge">Our advice · ${esc(day(w.advice.date || w.updated, { month: 'short', day: 'numeric' }))}</span>
       <b>${esc(w.advice.title)}</b>
       <span class="rp-banner-go">Read the analysis ${chev('M9 6l6 6-6 6')}</span>
@@ -307,7 +323,7 @@
       </div>
       ${W.advice ? `<div class="rp-sub" role="tablist" aria-label="This week">
         <button type="button" role="tab" data-sub="activity" aria-selected="${sub === 'activity'}">Leasing activity</button>
-        <button type="button" role="tab" data-sub="pricing" aria-selected="${sub === 'pricing'}">Pricing &amp; incentives</button>
+        <button type="button" role="tab" data-sub="pricing" aria-selected="${sub === 'pricing'}">${esc(W.advice.tab || 'Pricing & incentives')}</button>
       </div>` : ''}
       ${sub === 'pricing' ? '<div id="rp-advice"></div>' : `
       ${W.advice ? adviceBanner(W) : ''}
@@ -331,6 +347,31 @@
   // ---------- Pricing & incentives: the week's advice (written in the week file as "advice") ----------
   // blocks: points (bulleted reasons), bars (shares in %), table (cells are text, or [text, smaller line]),
   // plan (cards by group of suites) and note
+  // simple line icons for the sample flyer (drawn here, not taken from anyone's artwork)
+  const ICONS = {
+    contents: '<path d="M5 11V8a3 3 0 0 1 3-3h8a3 3 0 0 1 3 3v3"/><path d="M3 12a2 2 0 0 1 4 0v2h10v-2a2 2 0 0 1 4 0v5H3z"/><path d="M6 17v2M18 17v2"/>',
+    hotel: '<path d="M4 20V5h11v15"/><path d="M15 9h5v11"/><path d="M7.5 9h1M11 9h1M7.5 13h1M11 13h1M8 17h3"/><path d="M2 20h20"/>',
+    liability: '<path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M9 12l2 2 4-4"/>',
+  };
+  const ico = (k) => `<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${ICONS[k] || ''}</svg>`;
+  // a one-page document the tenant would receive: placeholders stand in for the logo, the quote link and the upload link
+  const flyer = (f) => `
+    <figure class="flyer">
+      <div class="flyer-top">
+        <div class="flyer-logo">${esc(f.logo || 'Your logo')}</div>
+        <h3>${esc(f.h)}</h3>
+        <p>${esc(f.sub)}</p>
+        <div class="flyer-covers">${f.covers.map((c) => `<div class="flyer-cover"><span class="flyer-ico">${ico(c.i)}</span><b>${esc(c.h)}</b><small>${esc(c.t)}</small></div>`).join('')}</div>
+      </div>
+      <div class="flyer-offer">
+        <div><span class="flyer-tag">${esc(f.offer.h)}</span><ul>${f.offer.items.map((x) => `<li>${esc(x)}</li>`).join('')}</ul></div>
+        <div class="flyer-cta"><span class="flyer-qr" aria-hidden="true">QR</span><b>${esc(f.offer.cta)}</b><span class="flyer-link">${esc(f.offer.link)}</span></div>
+      </div>
+      <ol class="flyer-steps">${f.steps.map((x, i) => `<li><b>${i + 1}</b><div><strong>${esc(x.h)}</strong><span>${esc(x.t)}</span></div></li>`).join('')}</ol>
+      <div class="flyer-proof"><span class="flyer-qr" aria-hidden="true">QR</span><div><b>${esc(f.proof.h)}</b> ${esc(f.proof.t)}<span class="flyer-link">${esc(f.proof.link)}</span></div></div>
+      <figcaption class="flyer-foot">${esc(f.foot)}</figcaption>
+    </figure>`;
+
   function advice(W) {
     const A = W.advice;
     const cell = (c) => (Array.isArray(c) ? `${esc(c[0])}${c[1] ? `<small>${esc(c[1])}</small>` : ''}` : esc(c));
@@ -343,6 +384,7 @@
           <thead><tr>${b.cols.map((c) => `<th${c.num ? ' class="num"' : ''}>${esc(c.l)}</th>`).join('')}</tr></thead>
           <tbody>${b.rows.map((r) => { const cells = Array.isArray(r) ? r : r.cells; return `<tr${r.hl ? ' class="hl"' : ''}>${cells.map((c, i) => `<td${b.cols[i]?.num ? ' class="num"' : ''} data-label="${esc(b.cols[i]?.l || '')}"><span class="v">${cell(c)}</span></td>`).join('')}</tr>`; }).join('')}</tbody>
         </table></div>${note}</section>`;
+      if (b.type === 'flyer') return `<section class="rp-sec">${head}${flyer(b.flyer)}${note}</section>`;
       if (b.type === 'plan') return `<section class="rp-sec">${head}<div class="plan">${b.items.map((x) => `<article class="plan-card"><span class="plan-when">${esc(x.when)}</span><h3>${esc(x.h)}</h3>${x.units ? `<p class="plan-units">${esc(x.units)}</p>` : ''}<p>${esc(x.t)}</p></article>`).join('')}</div>${note}</section>`;
       return `<section class="rp-sec">${head}${note}</section>`;
     };
@@ -371,6 +413,18 @@
     const byManager = units.filter((u) => /manager/i.test(u.status)).length;
     const open = units.filter((u) => u.status === 'Open').length;
     const homes = (list) => esc([...new Set(list.map((a) => homeName(a.u)))].join(', '));
+    const lost = (W.leasesLost || []).filter((a) => byB(a.u));
+    // applications grouped by what happened to them: "Elliot Towers #901, Braeview Manor #801 (on hold, Jan 1)"
+    const appText = (list) => [...list.reduce((g, a) => g.set(a.st || '', [...(g.get(a.st || '') || []), a]), new Map())]
+      .map(([st, xs]) => `${homes(xs)}${st ? ` (${esc(st)})` : ''}`).join(' · ');
+    const bld = [...new Set([...W.inventory.map((u) => u.code), ...W.leads.map((l) => code(l.u))])]
+      .filter((c) => names()[c] && (F.b === 'all' || c === F.b))
+      .map((c) => {
+        const li = leads.filter((l) => code(l.u) === c);
+        return { c, li, sh: shows.filter((s) => code(s.u) === c), ap: apps.filter((a) => code(a.u) === c), tops: count(li.filter((l) => l.u.includes(' ')), (l) => l.u).slice(0, 3), note: (W.buildingNotes || {})[c] };
+      })
+      .filter((x) => x.li.length || x.sh.length || x.ap.length || x.note)
+      .sort((a, b) => b.li.length - a.li.length);
 
     // the seven days of the week, Monday first
     const days = Array.from({ length: 7 }, (_, i) => addDays(W.week, i));
@@ -388,8 +442,8 @@
         <div class="kpi kpi-hero"><span>Inquiries</span><b>${leads.length}</b><small>from ${plural(people, 'person', 'people')}${F.b === 'all' && F.s === 'all' && W.unlogged ? `<br>plus at least ${W.unlogged} not logged one by one` : ''}</small></div>
         <div class="kpi"><span>Showings booked</span><b>${booked}</b><small>${pct(booked, leads.length)} of inquiries</small></div>
         <div class="kpi"><span>Showings held</span><b>${shows.length}</b><small>${plural(attended, 'person', 'people')} in person${F.b === 'all' && W.cancelled ? ` · ${W.cancelled} cancelled` : ''}</small></div>
-        <div class="kpi"><span>Applications</span><b>${apps.length}</b><small>${apps.length ? `for ${homes(apps)}` : 'none this week'}</small></div>
-        <div class="kpi"><span>Leases signed</span><b>${leases.length}</b><small>${leases.length ? homes(leases) : byManager ? `${plural(byManager, 'unit')} rented by the building managers` : 'none this week'}</small></div>
+        <div class="kpi"><span>Applications</span><b>${apps.length}</b><small>${apps.length ? appText(apps) : 'none this week'}</small></div>
+        <div class="kpi"><span>Leases signed</span><b>${leases.length}</b><small>${[leases.length ? homes(leases) : '', lost.length ? `${homes(lost)}: the signed lease fell through` : '', !leases.length && !lost.length ? (byManager ? `${plural(byManager, 'unit')} rented by the building managers` : 'none this week') : ''].filter(Boolean).join(' · ')}</small></div>
       </section>
 
       <section class="rp-grid">
@@ -403,6 +457,14 @@
       </section>
 
       ${W.notes?.length ? `<section class="rp-card rp-notes"><h2>Key takeaways</h2><ul>${W.notes.map((n) => `<li>${esc(n)}</li>`).join('')}</ul></section>` : ''}
+
+      ${bld.length ? `<section class="rp-sec"><h2>Highlights by building</h2><div class="bld">${bld.map((x) => `
+        <article class="bld-card">
+          <h3>${esc(names()[x.c])}</h3>
+          <p class="bld-stats">${[plural(x.li.length, 'inquiry', 'inquiries'), plural(x.sh.length, 'showing'), x.ap.length ? plural(x.ap.length, 'application') : ''].filter(Boolean).join(' · ')}</p>
+          ${x.tops.length ? `<p class="bld-top">Most asked: ${esc(x.tops.map(([u, n]) => `#${u.split(' ')[1]} (${n})`).join(', '))}</p>` : ''}
+          ${x.note ? `<p class="bld-note">${esc(x.note)}</p>` : ''}
+        </article>`).join('')}</div></section>` : ''}
 
       <section class="rp-sec">
         <h2>Showings: what prospects said</h2>
